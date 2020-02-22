@@ -1,0 +1,37 @@
+{
+  "name": "kfz_werkstatt_web_app",
+  "version": "0.0.1",
+  "description": "Web app for managing a specific automobile repair shop",
+  "engines": {
+    "node": "13.9.0",
+    "npm": "6.13.7"
+  },
+  "scripts": {
+    "test": "npm run test:unit",
+    "test:unit": "jest",
+    "start:dev": "nodemon -e ts -w backend --ignore '__tests__/' -x ts-node --project backend/tsconfig.json backend/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fr-ser/kfz_werkstatt_web_app.git"
+  },
+  "author": "Sergej Herbert",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/fr-ser/kfz_werkstatt_web_app/issues"
+  },
+  "homepage": "https://github.com/fr-ser/kfz_werkstatt_web_app#readme",
+  "dependencies": {
+    "fastify": "^2.12.0",
+    "fastify-basic-auth": "^0.5.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^25.1.3",
+    "@types/node": "^13.7.4",
+    "jest": "^25.1.0",
+    "nodemon": "^2.0.2",
+    "ts-jest": "^25.2.1",
+    "ts-node": "^8.6.2",
+    "typescript": "^3.8.2"
+  }
+}
