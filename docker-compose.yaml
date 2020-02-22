@@ -1,0 +1,12 @@
+version: "3.2"
+
+services:
+  db:
+    image: postgres:12-alpine
+    ports:
+      - 8432:5432
+    environment:
+      POSTGRES_USER: kfz
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./backend/__tests__/db_schema_seed.sql:/docker-entrypoint-initdb.d/db_schema_seed.sql

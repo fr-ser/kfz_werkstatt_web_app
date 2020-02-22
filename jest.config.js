@@ -1,9 +1,10 @@
 module.exports = {
-  roots: ["backend", "frontend"],
-  setupFiles: ["./backend/__tests__/setup.ts"],
-  testMatch: ["**/__tests__/**/*.test.(ts|tsx|js|jsx)"],
+  rootDir: "backend",
+  globalSetup: "./__tests__/_setup_global.ts",
+  setupFilesAfterEnv: ["./__tests__/_setup_after_env.ts"],
+  testMatch: ["**/__tests__/**/*.test.(ts|js)"],
   transform: {
-    "^.+\\.(ts|tsx)$": "ts-jest",
+    "^.+\\.(ts)$": "ts-jest",
   },
-  moduleFileExtensions: ["js", "jsx", "json", "ts"],
+  moduleFileExtensions: ["js", "ts"],
 };

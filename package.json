@@ -9,6 +9,7 @@
   "scripts": {
     "test": "npm run test:unit",
     "test:unit": "jest",
+    "test:tdd": "jest --watch",
     "start:dev": "nodemon -e ts -w backend --ignore '__tests__/' -x ts-node --project backend/tsconfig.json backend/index.ts"
   },
   "repository": {
@@ -23,11 +24,15 @@
   "homepage": "https://github.com/fr-ser/kfz_werkstatt_web_app#readme",
   "dependencies": {
     "fastify": "^2.12.0",
-    "fastify-basic-auth": "^0.5.0"
+    "fastify-basic-auth": "^0.5.0",
+    "pg": "^7.18.2"
   },
   "devDependencies": {
+    "@types/faker": "^4.1.9",
     "@types/jest": "^25.1.3",
     "@types/node": "^13.7.4",
+    "@types/pg": "^7.14.1",
+    "faker": "^4.1.0",
     "jest": "^25.1.0",
     "nodemon": "^2.0.2",
     "ts-jest": "^25.2.1",
