@@ -1,11 +1,11 @@
 import { Pool, types } from "pg";
 
-// the type (numberic) could be too large for JavaScript. That is why the type needs to be
-// casted specifically. For that the oid from the database is necessary:
 // select typname, oid, typarray from pg_type where typname = 'numeric' order by oid;
-types.setTypeParser(1700, function(val) {
-  return parseFloat(val);
-});
+const OID_NUMERIC = 1700;
+const OID_DATE = 1082;
+
+types.setTypeParser(OID_NUMERIC, number => parseFloat(number));
+types.setTypeParser(OID_DATE, date_str => date_str);
 
 import { DB_URI } from "../config";
 

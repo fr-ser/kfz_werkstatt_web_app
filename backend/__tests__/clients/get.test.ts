@@ -1,5 +1,4 @@
 import server from "@backend/server";
-import { _pool } from "@backend/db/db";
 
 import { DbClient } from "@backend/interfaces/db";
 
@@ -7,7 +6,7 @@ import { Fixture } from "@tests/factory/factory";
 import { createClient } from "@tests/factory/client";
 import { getAuthHeader } from "@tests/helpers";
 
-describe("clients", () => {
+describe("get clients", () => {
   let factories: Fixture<DbClient>[] = [];
 
   beforeAll(async () => {
@@ -21,7 +20,7 @@ describe("clients", () => {
     factories = [];
   });
 
-  describe("api/clients", () => {
+  describe("client list", () => {
     it("returns the list of clients", async () => {
       factories.push(await createClient());
       factories.push(await createClient());
@@ -50,7 +49,7 @@ describe("clients", () => {
     });
   });
 
-  describe("api/clients/<client_id>", () => {
+  describe("single client", () => {
     it("returns the the client", async () => {
       const client = await createClient();
       factories.push(client);

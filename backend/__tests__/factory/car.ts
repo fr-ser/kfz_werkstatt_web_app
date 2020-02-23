@@ -3,7 +3,7 @@ import * as faker from "faker";
 import { DbCar } from "@backend/interfaces/db";
 
 import { Fixture, _test_pool } from "@tests/factory/factory";
-import { dateTimeToDate } from "@tests/helpers";
+import { getRandomDate } from "@tests/helpers";
 
 function getCarCleanup(carId: string) {
   return async function() {
@@ -17,20 +17,20 @@ export async function createCar(): Promise<Fixture<DbCar>> {
     license_plate_numer: faker.random.alphaNumeric(10),
     manufacturer: faker.vehicle.manufacturer(),
     model: faker.vehicle.model(),
-    first_registration: dateTimeToDate(faker.date.past()),
+    first_registration: getRandomDate(),
     color: faker.commerce.color(),
     displacement: faker.random.alphaNumeric(5),
     comment: faker.lorem.words(7),
     fuel: faker.vehicle.fuel(),
     performance: faker.random.alphaNumeric(5),
-    oil_change_date: dateTimeToDate(faker.date.past()),
+    oil_change_date: getRandomDate(),
     oil_change_mileage: faker.random.number(),
     tires: faker.random.alphaNumeric(5),
-    tuev_date: dateTimeToDate(faker.date.past()),
+    tuev_date: getRandomDate(),
     vin: faker.vehicle.vin(),
     to_2: faker.random.alphaNumeric(5),
     to_3: faker.random.alphaNumeric(5),
-    timing_belt_date: dateTimeToDate(faker.date.past()),
+    timing_belt_date: getRandomDate(),
     timing_belt_mileage: faker.random.number(),
   };
 

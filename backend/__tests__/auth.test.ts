@@ -5,17 +5,13 @@ describe("authentication", () => {
     await server.ready();
   });
 
+  // not all routes are tested as basic auth is added at the top level for all api endpoints
   const protectedRoutes = [
     "/api/clients",
-    "/api/clients/not_existing_id",
     "/api/cars",
-    "/api/cars/not_existing_id",
     "/api/articles",
-    "/api/articles/not_existing_id",
     "/api/orders",
-    "/api/orders/not_existing_id",
     "/api/documents",
-    "/api/documents/not_existing_id",
   ];
 
   for (const url of protectedRoutes) {
@@ -45,7 +41,7 @@ describe("authentication", () => {
             headers: { Authorization: `Basic ${encoded_credentials}` },
             url,
           });
-          expect(response.statusCode).not.toEqual(401);
+          expect(response.statusCode).toEqual(200);
         }
       });
     });

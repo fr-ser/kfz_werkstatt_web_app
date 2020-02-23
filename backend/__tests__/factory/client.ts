@@ -3,7 +3,11 @@ import * as faker from "faker";
 import { DbClient } from "@backend/interfaces/db";
 
 import { Fixture, _test_pool } from "@tests/factory/factory";
-import { dateTimeToDate } from "@tests/helpers";
+import { getRandomDate } from "@tests/helpers";
+
+export async function cleanupClients() {
+  await _test_pool.query(`TRUNCATE TABLE client CASCADE`);
+}
 
 function getClientCleanup(clientId: string) {
   return async function() {
@@ -19,7 +23,7 @@ export async function createClient(): Promise<Fixture<DbClient>> {
     email: faker.internet.email(),
     phone_number: faker.phone.phoneNumber(),
     company_name: faker.company.companyName(),
-    birthday: dateTimeToDate(faker.date.past()),
+    birthday: getRandomDate(),
     comment: faker.lorem.words(7),
     mobile_number: faker.phone.phoneNumber(),
     zip_code: faker.random.number(99999),

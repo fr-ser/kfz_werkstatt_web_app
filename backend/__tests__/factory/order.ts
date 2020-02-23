@@ -5,7 +5,7 @@ import { DbOrder, DbClient, DbCar, DbPaymentMethod, DbOrderState } from "@backen
 import { Fixture, _test_pool } from "@tests/factory/factory";
 import { createCar } from "@tests/factory/car";
 import { createClient } from "@tests/factory/client";
-import { dateTimeToDate, getRandomEnumValue } from "@tests/helpers";
+import { getRandomDate, getRandomEnumValue } from "@tests/helpers";
 
 function getOrderCleanup(orderId: string, client: Fixture<DbClient>, car: Fixture<DbCar>) {
   return async function() {
@@ -24,8 +24,8 @@ export async function createOrder(): Promise<Fixture<DbOrder>> {
     car_id: car.element.car_id,
     client_id: client.element.client_id,
     title: faker.random.words(),
-    date: dateTimeToDate(faker.date.past()),
-    payment_due_date: dateTimeToDate(faker.date.past()),
+    date: getRandomDate(),
+    payment_due_date: getRandomDate(),
     payment_method: getRandomEnumValue(DbPaymentMethod),
     state: getRandomEnumValue(DbOrderState),
     description: faker.random.words(),

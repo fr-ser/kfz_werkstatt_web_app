@@ -15,3 +15,28 @@ export async function getClients(clientId?: string): Promise<DbClient[] | DbClie
     }
   }
 }
+
+export async function saveClient(client: DbClient) {
+  await _pool.query(
+    `
+        INSERT INTO client (
+            client_id, first_name, last_name, email, phone_number, company_name,
+            birthday, comment, mobile_number, zip_code, city, street_and_number
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    `,
+    [
+      client.client_id,
+      client.first_name,
+      client.last_name,
+      client.email,
+      client.phone_number,
+      client.company_name,
+      client.birthday,
+      client.comment,
+      client.mobile_number,
+      client.zip_code,
+      client.city,
+      client.street_and_number,
+    ]
+  );
+}

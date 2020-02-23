@@ -3,7 +3,7 @@ import * as faker from "faker";
 import { DbDocument, DbDocumentType, DbOrder } from "@backend/interfaces/db";
 
 import { Fixture, _test_pool } from "@tests/factory/factory";
-import { getRandomEnumValue, dateTimeToDate } from "../helpers";
+import { getRandomEnumValue, getRandomDate } from "../helpers";
 import { createOrder } from "./order";
 
 function getDocumentCleanup(documentId: string, order: Fixture<DbOrder>) {
@@ -19,7 +19,7 @@ export async function createDocument(): Promise<Fixture<DbDocument>> {
   const document = {
     document_id: `Sth${Date.now()}`,
     art: getRandomEnumValue(DbDocumentType),
-    creation_date: dateTimeToDate(faker.date.past()),
+    creation_date: getRandomDate(),
     title: faker.random.words(),
     client_id: order.element.client_id,
     car_id: order.element.car_id,

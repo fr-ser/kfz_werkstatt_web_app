@@ -5,7 +5,7 @@ export interface DbClient {
   email?: string;
   phone_number?: string;
   company_name?: string;
-  birthday?: Date;
+  birthday?: string;
   comment?: string;
   mobile_number?: string;
   zip_code?: number;
@@ -18,20 +18,20 @@ export interface DbCar {
   license_plate_numer: string;
   manufacturer: string;
   model: string;
-  first_registration?: Date;
+  first_registration?: string;
   color?: string;
   displacement?: string;
   comment?: string;
   fuel?: string;
   performance?: string;
-  oil_change_date?: Date;
+  oil_change_date?: string;
   oil_change_mileage?: number;
   tires?: string;
-  tuev_date?: Date;
+  tuev_date?: string;
   vin?: string;
   to_2?: string;
   to_3?: string;
-  timing_belt_date?: Date;
+  timing_belt_date?: string;
   timing_belt_mileage?: number;
 }
 
@@ -58,8 +58,8 @@ export interface DbOrder {
   car_id: string;
   client_id: string;
   title: string;
-  date: Date;
-  payment_due_date: Date;
+  date: string;
+  payment_due_date: string;
   payment_method: DbPaymentMethod;
   state: DbOrderState;
   description?: string;
@@ -76,7 +76,7 @@ export enum DbDocumentType {
 export interface DbDocument {
   document_id: string;
   art: DbDocumentType;
-  creation_date: Date;
+  creation_date: string;
   title: string;
   client_id: string;
   car_id: string;
