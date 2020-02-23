@@ -5,7 +5,14 @@ describe("authentication", () => {
     await server.ready();
   });
 
-  const protectedRoutes = ["/api/clients", "/api/clients/not_existing_id"];
+  const protectedRoutes = [
+    "/api/clients",
+    "/api/clients/not_existing_id",
+    "/api/cars",
+    "/api/cars/not_existing_id",
+    "/api/articles",
+    "/api/articles/not_existing_id",
+  ];
 
   for (const url of protectedRoutes) {
     describe(url, () => {

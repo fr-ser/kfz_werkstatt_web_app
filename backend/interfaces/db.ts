@@ -34,3 +34,11 @@ export interface DbCar {
   timing_belt_date?: Date;
   timing_belt_mileage?: number;
 }
+
+export interface DbArticle {
+  article_id: string;
+  description: string;
+  article_number?: string;
+  stock_amount?: number;
+  price?: number;
+}

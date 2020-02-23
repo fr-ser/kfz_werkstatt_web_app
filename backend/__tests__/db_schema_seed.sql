@@ -38,3 +38,12 @@ CREATE TABLE car (
     -- kunden
     -- auftraege
 );
+
+
+CREATE TABLE article (
+        article_id TEXT PRIMARY KEY
+    ,   description TEXT NOT NULL
+    ,   article_number TEXT
+    ,   stock_amount NUMERIC
+    ,   price NUMERIC
+);
