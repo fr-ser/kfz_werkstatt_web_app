@@ -1,14 +1,14 @@
 import server from "@backend/server";
 import { _pool } from "@backend/db/db";
 
-import { DbClient } from "@backend/interfaces/db";
+import { DbCar } from "@backend/interfaces/db";
 
-import { Fixture } from "@tests/factory/factory";
-import { createClient } from "@tests/factory/client";
 import { getAuthHeader } from "@tests/helpers";
+import { Fixture } from "@tests/factory/factory";
+import { createCar } from "@tests/factory/car";
 
-describe("clients", () => {
-  let factories: Fixture<DbClient>[] = [];
+describe("cars", () => {
+  let factories: Fixture<DbCar>[] = [];
 
   beforeAll(async () => {
     await server.ready();
@@ -21,15 +21,15 @@ describe("clients", () => {
     factories = [];
   });
 
-  describe("api/clients", () => {
-    it("returns the list of clients", async () => {
-      factories.push(await createClient());
-      factories.push(await createClient());
+  describe("api/cars", () => {
+    it("returns the list of cars", async () => {
+      factories.push(await createCar());
+      factories.push(await createCar());
 
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
-        url: "/api/clients",
+        url: "/api/cars",
       });
       const jsonResp = JSON.parse(response.payload);
 
@@ -37,39 +37,39 @@ describe("clients", () => {
       expect(jsonResp.length).toEqual(2);
     });
 
-    it("returns correct client properties", async () => {
-      const client = await createClient();
-      factories.push(client);
+    it("returns correct car properties", async () => {
+      const car = await createCar();
+      factories.push(car);
 
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
-        url: "/api/clients",
+        url: "/api/cars",
       });
-      expect(response.payload).toEqual(JSON.stringify([client.element]));
+      expect(response.payload).toEqual(JSON.stringify([car.element]));
     });
   });
 
-  describe("api/clients/<client_id>", () => {
-    it("returns the the client", async () => {
-      const client = await createClient();
-      factories.push(client);
+  describe("api/cars/<car_id>", () => {
+    it("returns the the car", async () => {
+      const car = await createCar();
+      factories.push(car);
 
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
-        url: `/api/clients/${client.element.client_id}`,
+        url: `/api/cars/${car.element.car_id}`,
       });
 
       expect(response.statusCode).toEqual(200);
-      expect(response.payload).toEqual(JSON.stringify(client.element));
+      expect(response.payload).toEqual(JSON.stringify(car.element));
     });
 
-    it("returns the 404 for non existing clients", async () => {
+    it("returns the 404 for non existing cars", async () => {
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
-        url: `/api/clients/sth_not_existing`,
+        url: `/api/cars/sth_not_existing`,
       });
 
       expect(response.statusCode).toEqual(404);

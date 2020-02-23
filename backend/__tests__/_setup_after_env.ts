@@ -1,5 +1,5 @@
-import { _pool } from "../db/db";
-import { _test_pool } from "./factory";
+import { _pool } from "@backend/db/db";
+import { _test_pool } from "@tests/factory/factory";
 
 afterAll(async function() {
   // close the pool to avoid open connections
