@@ -19,7 +19,7 @@ function getClientCleanup(clientId: string) {
   };
 }
 
-export async function createUser(): Promise<Fixture & DbClient> {
+export async function createClient(): Promise<Fixture & DbClient> {
   const client = {
     client_id: `K${Date.now()}`,
     first_name: faker.name.firstName(),
