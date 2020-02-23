@@ -12,6 +12,8 @@ describe("authentication", () => {
     "/api/cars/not_existing_id",
     "/api/articles",
     "/api/articles/not_existing_id",
+    "/api/orders",
+    "/api/orders/not_existing_id",
   ];
 
   for (const url of protectedRoutes) {

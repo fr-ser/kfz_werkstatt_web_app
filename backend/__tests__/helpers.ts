@@ -10,3 +10,8 @@ export function dateTimeToDate(datetime: Date): Date {
 
   return new Date(year, month, day);
 }
+
+export function getRandomEnumValue<T>(enumObject: { [key: string]: T }): T {
+  const values = Object.values(enumObject);
+  return values[Math.floor(Math.random() * values.length)];
+}

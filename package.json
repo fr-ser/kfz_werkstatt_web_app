@@ -8,8 +8,8 @@
   },
   "scripts": {
     "test": "npm run test:unit",
-    "test:unit": "jest",
-    "test:tdd": "jest --watch",
+    "test:unit": "jest --runInBand",
+    "test:tdd": "npm run test:unit -- --watch",
     "start:dev": "nodemon -e ts -w backend --ignore '__tests__/' -x ts-node --project backend/tsconfig.json -r tsconfig-paths/register backend/index.ts"
   },
   "repository": {

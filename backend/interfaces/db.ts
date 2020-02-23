@@ -42,3 +42,28 @@ export interface DbArticle {
   stock_amount?: number;
   price?: number;
 }
+
+export enum DbPaymentMethod {
+  cash = "cash",
+  remittance = "remittance",
+}
+export enum DbOrderState {
+  in_progress = "in_progress",
+  done = "done",
+  cancelled = "cancelled",
+}
+
+export interface DbOrder {
+  order_id: string;
+  car_id: string;
+  client_id: string;
+  title: string;
+  date: Date;
+  payment_due_date: Date;
+  payment_method: DbPaymentMethod;
+  state: DbOrderState;
+  description?: string;
+  milage?: number;
+  // positionen: Array<AuftragsPosition>;
+  // dokumente: Array<string>;
+}

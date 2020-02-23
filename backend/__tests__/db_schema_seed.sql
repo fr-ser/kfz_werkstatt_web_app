@@ -47,3 +47,21 @@ CREATE TABLE article (
     ,   stock_amount NUMERIC
     ,   price NUMERIC
 );
+
+CREATE TYPE payment_method AS ENUM ('cash', 'remittance');
+CREATE TYPE order_state AS ENUM ('in_progress', 'done', 'cancelled');
+
+CREATE TABLE order_ (
+        order_id TEXT PRIMARY KEY
+    ,   car_id TEXT NOT NULL REFERENCES car(car_id)
+    ,   client_id TEXT NOT NULL REFERENCES client(client_id)
+    ,   title TEXT NOT NULL
+    ,   date Date NOT NULL
+    ,   payment_due_date Date NOT NULL
+    ,   payment_method payment_method NOT NULL
+    ,   state order_state NOT NULL
+    ,   description TEXT
+    ,   milage NUMERIC
+    -- ,   positionen Array<AuftragsPosition>
+    -- ,   dokumente Array<string>
+);
