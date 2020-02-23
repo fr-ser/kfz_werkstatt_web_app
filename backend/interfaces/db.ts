@@ -67,3 +67,19 @@ export interface DbOrder {
   // positionen: Array<AuftragsPosition>;
   // dokumente: Array<string>;
 }
+
+export enum DbDocumentType {
+  quote = "quote",
+  invoice = "invoice",
+}
+
+export interface DbDocument {
+  document_id: string;
+  art: DbDocumentType;
+  creation_date: Date;
+  title: string;
+  client_id: string;
+  car_id: string;
+  order_id: string;
+  document_content: Object;
+}

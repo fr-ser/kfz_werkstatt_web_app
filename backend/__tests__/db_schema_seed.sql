@@ -65,3 +65,17 @@ CREATE TABLE order_ (
     -- ,   positionen Array<AuftragsPosition>
     -- ,   dokumente Array<string>
 );
+
+
+CREATE TYPE document_type AS ENUM ('quote', 'invoice');
+
+CREATE TABLE document (
+        document_id TEXT PRIMARY KEY
+    ,   art document_type NOT NULL
+    ,   creation_date DATE NOT NULL
+    ,   title TEXT NOT NULL
+    ,   client_id TEXT NOT NULL REFERENCES client(client_id)
+    ,   car_id TEXT NOT NULL REFERENCES car(car_id)
+    ,   order_id TEXT NOT NULL REFERENCES order_(order_id)
+    ,   document_content JSON NOT NULL
+);

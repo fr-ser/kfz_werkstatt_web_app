@@ -6,6 +6,7 @@ import clientRoutes from "@backend/routes/clients";
 import carRoutes from "@backend/routes/cars";
 import articleRoutes from "@backend/routes/articles";
 import orderRoutes from "@backend/routes/orders";
+import documentRoutes from "@backend/routes/documents";
 
 const server = fastify();
 
@@ -15,6 +16,7 @@ server.register(clientRoutes);
 server.register(carRoutes);
 server.register(articleRoutes);
 server.register(orderRoutes);
+server.register(documentRoutes);
 
 server.after(() => {
   server.addHook("preHandler", server.basicAuth);

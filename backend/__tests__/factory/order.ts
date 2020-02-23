@@ -18,6 +18,7 @@ function getOrderCleanup(orderId: string, client: Fixture<DbClient>, car: Fixtur
 export async function createOrder(): Promise<Fixture<DbOrder>> {
   const car = await createCar();
   const client = await createClient();
+
   const order = {
     order_id: `Auf${Date.now()}`,
     car_id: car.element.car_id,
