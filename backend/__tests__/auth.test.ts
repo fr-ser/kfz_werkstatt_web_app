@@ -1,4 +1,4 @@
-import server from "../server";
+import server from "@backend/server";
 
 describe("authentication", () => {
   beforeAll(async () => {

@@ -1,9 +1,9 @@
 import * as fastify from "fastify";
 import * as fastifyBasicAuth from "fastify-basic-auth";
 
-import { validate } from "./auth";
-import dummyRoutes from "./routes/dummy";
-import clientRoutes from "./routes/clients";
+import { validate } from "@backend/auth";
+import dummyRoutes from "@backend/routes/dummy";
+import clientRoutes from "@backend/routes/clients";
 
 const server = fastify();
 

@@ -1,4 +1,4 @@
-import { BASIC_AUTH_CREDENTIALS } from "./config";
+import { BASIC_AUTH_CREDENTIALS } from "@backend/config";
 
 export async function validate(username: string, password: string) {
   if (!BASIC_AUTH_CREDENTIALS[username] || BASIC_AUTH_CREDENTIALS[username] !== password) {

@@ -1,11 +1,11 @@
-import server from "../server";
+import server from "@backend/server";
+import { _pool } from "@backend/db/db";
 
-import { getAuthHeader } from "./helpers";
-import { _pool } from "../db/db";
-import { Factory, createUser } from "./factory";
+import { getAuthHeader } from "@tests/helpers";
+import { Fixture, createUser } from "@tests/factory";
 
 describe("clients", () => {
-  let factories: Factory[] = [];
+  let factories: Fixture[] = [];
 
   beforeAll(async () => {
     await server.ready();
@@ -15,9 +15,11 @@ describe("clients", () => {
     for (const factory of factories) {
       await factory.destroy();
     }
+    factories = [];
   });
 
   it("returns the list of clients", async () => {
+    factories.push(await createUser());
     factories.push(await createUser());
 
     const response = await server.inject({
@@ -28,6 +30,6 @@ describe("clients", () => {
     const jsonResp = JSON.parse(response.payload);
 
     expect(response.statusCode).toEqual(200);
-    expect(jsonResp.length).toEqual(1);
+    expect(jsonResp.length).toEqual(2);
   });
 });

@@ -1,10 +1,6 @@
 import { _pool } from "./db";
 
 export async function getClients() {
-  const client = await _pool.connect();
-  try {
-    return client.query("SELECT * FROM clients");
-  } finally {
-    client.release();
-  }
+  const query_result = await _pool.query("SELECT * FROM clients");
+  return query_result.rows;
 }

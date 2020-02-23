@@ -10,7 +10,7 @@
     "test": "npm run test:unit",
     "test:unit": "jest",
     "test:tdd": "jest --watch",
-    "start:dev": "nodemon -e ts -w backend --ignore '__tests__/' -x ts-node --project backend/tsconfig.json backend/index.ts"
+    "start:dev": "nodemon -e ts -w backend --ignore '__tests__/' -x ts-node --project backend/tsconfig.json -r tsconfig-paths/register backend/index.ts"
   },
   "repository": {
     "type": "git",
@@ -37,6 +37,7 @@
     "nodemon": "^2.0.2",
     "ts-jest": "^25.2.1",
     "ts-node": "^8.6.2",
+    "tsconfig-paths": "^3.9.0",
     "typescript": "^3.8.2"
   }
 }

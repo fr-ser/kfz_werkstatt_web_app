@@ -1,14 +1,15 @@
 import { Pool } from "pg";
 import * as faker from "faker";
 
-import { DB_URI } from "../config";
+import { DB_URI } from "@backend/config";
+import { DbClient } from "@backend/interfaces/database";
 
 export const _test_pool = new Pool({
   connectionString: DB_URI,
   application_name: "jest-test",
 });
 
-export interface Factory {
+export interface Fixture {
   destroy: () => Promise<void>;
 }
 
@@ -18,8 +19,22 @@ function getClientCleanup(clientId: string) {
   };
 }
 
-export async function createUser(): Promise<Factory> {
-  const clientId = `K${Date.now()}`;
+export async function createUser(): Promise<Fixture & DbClient> {
+  const client = {
+    client_id: `K${Date.now()}`,
+    first_name: faker.name.firstName(),
+    last_name: faker.name.lastName(),
+    email: faker.internet.email(),
+    phone_number: faker.phone.phoneNumber(),
+    company_name: faker.company.companyName(),
+    birthday: faker.date.past(),
+    comment: faker.lorem.words(7),
+    mobile_number: faker.phone.phoneNumber(),
+    zip_code: faker.random.number(99999),
+    city: faker.address.city(),
+    street_and_number: faker.address.streetAddress(),
+  };
+
   await _test_pool.query(
     `
         INSERT INTO clients (
@@ -28,22 +43,20 @@ export async function createUser(): Promise<Factory> {
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     `,
     [
-      clientId,
-      faker.name.firstName(),
-      faker.name.lastName(),
-      faker.internet.email(),
-      faker.phone.phoneNumber(),
-      faker.company.companyName(),
-      faker.date
-        .past()
-        .toISOString()
-        .substr(0, 10),
-      faker.lorem.words(7),
-      faker.phone.phoneNumber(),
-      faker.random.number(99999),
-      faker.address.city(),
-      faker.address.streetAddress(),
+      client.client_id,
+      client.first_name,
+      client.last_name,
+      client.email,
+      client.phone_number,
+      client.company_name,
+      client.birthday,
+      client.comment,
+      client.mobile_number,
+      client.zip_code,
+      client.city,
+      client.street_and_number,
     ]
   );
-  return { destroy: getClientCleanup(clientId) };
+
+  return { ...client, destroy: getClientCleanup(client.client_id) };
 }

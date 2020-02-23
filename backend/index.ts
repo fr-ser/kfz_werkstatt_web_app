@@ -1,4 +1,4 @@
-import server from "./server";
+import server from "@backend/server";
 
 process.on("uncaughtException", error => {
   console.error(error);
