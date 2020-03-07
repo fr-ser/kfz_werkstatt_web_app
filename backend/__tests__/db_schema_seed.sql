@@ -17,7 +17,7 @@ CREATE TABLE client (
 
 CREATE TABLE car (
         car_id TEXT PRIMARY KEY
-    ,   license_plate_numer TEXT NOT NULL
+    ,   license_plate TEXT NOT NULL
     ,   manufacturer TEXT NOT NULL
     ,   model TEXT NOT NULL
     ,   first_registration DATE
@@ -39,6 +39,11 @@ CREATE TABLE car (
     -- auftraege
 );
 
+CREATE TABLE car_ownership (
+        car_id TEXT NOT NULL REFERENCES car(car_id)
+    ,   client_id TEXT NOT NULL REFERENCES client(client_id)
+    ,   PRIMARY KEY(car_id, client_id)
+);
 
 CREATE TABLE article (
         article_id TEXT PRIMARY KEY

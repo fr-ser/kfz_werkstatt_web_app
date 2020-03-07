@@ -1,4 +1,4 @@
-import { pick, omit } from "lodash";
+import { pick } from "lodash";
 
 import server from "@backend/server";
 
@@ -43,25 +43,33 @@ describe("clients", () => {
       });
 
       expect(response.statusCode).toEqual(201);
-      const dbClients = await getClients();
-      expect(dbClients.length).toBe(1);
-      expect(dbClients[0]).toEqual(validPayload);
+      const apiClients = await getClients();
+      expect(apiClients.length).toBe(1);
+
+      for (const key of Object.keys(validPayload)) {
+        expect((apiClients[0] as any)[key]).toEqual((validPayload as any)[key]);
+      }
     });
 
     it("creates a client for a minimal payload", async () => {
+      const payload = pick(validPayload, requiredProperties);
       const response = await server.inject({
         method: "POST",
         headers: { ...getAuthHeader() },
         url: `/api/clients`,
-        payload: pick(validPayload, requiredProperties),
+        payload,
       });
 
       expect(response.statusCode).toEqual(201);
-      const dbClients = await getClients();
-      expect(dbClients.length).toBe(1);
+      const apiClients = await getClients();
+      expect(apiClients.length).toBe(1);
+
+      for (const key of requiredProperties) {
+        expect((apiClients[0] as any)[key]).toEqual((payload as any)[key]);
+      }
     });
 
-    it("returns the 422 for database errors (duplicate key)", async () => {
+    it("returns 422 for database errors (duplicate key)", async () => {
       const existingClient = await createClient();
       const response = await server.inject({
         method: "POST",
@@ -73,7 +81,7 @@ describe("clients", () => {
       expect(response.statusCode).toEqual(422);
     });
 
-    it("returns the 400 for nonsense", async () => {
+    it("returns 400 for nonsense", async () => {
       const response = await server.inject({
         method: "POST",
         headers: { ...getAuthHeader() },
@@ -85,7 +93,7 @@ describe("clients", () => {
     });
 
     for (const property of requiredProperties) {
-      it(`returns the 400 for missing ${property}`, async () => {
+      it(`returns 400 for missing ${property}`, async () => {
         const invalidCopy: any = { ...validPayload };
         delete invalidCopy[property];
 

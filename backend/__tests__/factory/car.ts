@@ -2,13 +2,13 @@ import * as faker from "faker";
 
 import { DbCar } from "@backend/interfaces/db";
 
-import { _test_pool } from "@tests/factory/factory";
+import { test_pool } from "@tests/factory/factory";
 import { getRandomDate } from "@tests/helpers";
 
 export async function createCar(): Promise<DbCar> {
   const car = {
     car_id: `A${Date.now()}`,
-    license_plate_numer: faker.random.alphaNumeric(10),
+    license_plate: faker.random.alphaNumeric(10),
     manufacturer: faker.vehicle.manufacturer(),
     model: faker.vehicle.model(),
     first_registration: getRandomDate(),
@@ -28,10 +28,10 @@ export async function createCar(): Promise<DbCar> {
     timing_belt_mileage: faker.random.number(),
   };
 
-  await _test_pool.query(
+  await test_pool.query(
     `
         INSERT INTO car (
-          car_id, license_plate_numer, manufacturer, model, first_registration, color,
+          car_id, license_plate, manufacturer, model, first_registration, color,
           displacement, comment, fuel, performance, oil_change_date, oil_change_mileage, tires,
           tuev_date, vin, to_2, to_3, timing_belt_date, timing_belt_mileage
         ) VALUES (
@@ -40,7 +40,7 @@ export async function createCar(): Promise<DbCar> {
     `,
     [
       car.car_id,
-      car.license_plate_numer,
+      car.license_plate,
       car.manufacturer,
       car.model,
       car.first_registration,

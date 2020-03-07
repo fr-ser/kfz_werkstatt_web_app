@@ -1,10 +1,12 @@
 import server from "@backend/server";
+import { getClient } from "@backend/db/clients";
 
 import { createClient } from "@tests/factory/client";
+import { createCar } from "@tests/factory/car";
 import { db_cleanup } from "@tests/factory/factory";
 import { getAuthHeader } from "@tests/helpers";
 
-describe("get clients", () => {
+describe("clients - GET", () => {
   beforeAll(async () => {
     await server.ready();
   });
@@ -30,29 +32,44 @@ describe("get clients", () => {
     });
 
     it("returns correct client properties", async () => {
-      const client = await createClient();
+      const dbClient = await createClient();
+
+      const apiClient = await getClient(dbClient.client_id);
 
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
         url: "/api/clients",
       });
-      expect(response.payload).toEqual(JSON.stringify([client]));
+      expect(response.payload).toEqual(JSON.stringify([apiClient]));
+    });
+
+    it("returns an empty list without errors", async () => {
+      const response = await server.inject({
+        method: "GET",
+        headers: { ...getAuthHeader() },
+        url: "/api/clients",
+      });
+      expect(response.payload).toEqual(JSON.stringify([]));
     });
   });
 
   describe("single client", () => {
     it("returns the the client", async () => {
-      const client = await createClient();
+      const car1 = await createCar();
+      const car2 = await createCar();
+      const dbClient = await createClient([car1.car_id, car2.car_id]);
+
+      const apiClient = await getClient(dbClient.client_id);
 
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
-        url: `/api/clients/${client.client_id}`,
+        url: `/api/clients/${dbClient.client_id}`,
       });
 
       expect(response.statusCode).toEqual(200);
-      expect(response.payload).toEqual(JSON.stringify(client));
+      expect(response.payload).toEqual(JSON.stringify(apiClient));
     });
 
     it("returns the 404 for non existing clients", async () => {

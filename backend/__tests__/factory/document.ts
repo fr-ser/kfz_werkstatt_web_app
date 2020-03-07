@@ -2,7 +2,7 @@ import * as faker from "faker";
 
 import { DbDocument, DbDocumentType } from "@backend/interfaces/db";
 
-import { _test_pool } from "@tests/factory/factory";
+import { test_pool } from "@tests/factory/factory";
 import { getRandomEnumValue, getRandomDate } from "../helpers";
 import { createOrder } from "./order";
 
@@ -20,7 +20,7 @@ export async function createDocument(): Promise<DbDocument> {
     document_content: {},
   };
 
-  await _test_pool.query(
+  await test_pool.query(
     `
         INSERT INTO document (
           document_id, art, creation_date, title, client_id, car_id, order_id, document_content

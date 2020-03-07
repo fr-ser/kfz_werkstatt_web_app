@@ -2,10 +2,10 @@ import * as faker from "faker";
 
 import { DbClient } from "@backend/interfaces/db";
 
-import { _test_pool } from "@tests/factory/factory";
+import { test_pool } from "@tests/factory/factory";
 import { getRandomDate } from "@tests/helpers";
 
-export async function createClient(): Promise<DbClient> {
+export async function createClient(carIds?: string[]): Promise<DbClient> {
   const client = {
     client_id: `K${Date.now()}`,
     first_name: faker.name.firstName(),
@@ -21,7 +21,7 @@ export async function createClient(): Promise<DbClient> {
     street_and_number: faker.address.streetAddress(),
   };
 
-  await _test_pool.query(
+  await test_pool.query(
     `
         INSERT INTO client (
             client_id, first_name, last_name, email, phone_number, company_name,
@@ -43,6 +43,24 @@ export async function createClient(): Promise<DbClient> {
       client.street_and_number,
     ]
   );
+
+  if (carIds && carIds.length) {
+    const query_args = carIds.reduce(
+      (acc, carId, idx) => {
+        // arguments are a bit tricky because the client id needs to
+        // go to each carId (thats why we double the idx)
+        acc.args.push(carId, client.client_id);
+        acc.ordinals.push(`($${idx * 2 + 1}, $${idx * 2 + 2})`);
+        return acc;
+      },
+      { ordinals: [] as string[], args: [] as string[] }
+    );
+
+    await test_pool.query(
+      `INSERT INTO car_ownership (car_id, client_id) VALUES ${query_args.ordinals.join(", ")}`,
+      query_args.args
+    );
+  }
 
   return client;
 }

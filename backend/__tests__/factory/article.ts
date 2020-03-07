@@ -2,15 +2,9 @@ import * as faker from "faker";
 
 import { DbArticle } from "@backend/interfaces/db";
 
-import { Fixture, _test_pool } from "@tests/factory/factory";
+import { test_pool } from "@tests/factory/factory";
 
-function getArticleCleanup(articleId: string) {
-  return async function() {
-    await _test_pool.query(`DELETE FROM article WHERE article_id = $1`, [articleId]);
-  };
-}
-
-export async function createArticle(): Promise<Fixture<DbArticle>> {
+export async function createArticle(): Promise<DbArticle> {
   const article = {
     article_id: `Art${Date.now()}`,
     description: faker.commerce.product(),
@@ -19,7 +13,7 @@ export async function createArticle(): Promise<Fixture<DbArticle>> {
     price: faker.random.number(),
   };
 
-  await _test_pool.query(
+  await test_pool.query(
     `
         INSERT INTO article (
             article_id, description, article_number, stock_amount, price
@@ -34,5 +28,5 @@ export async function createArticle(): Promise<Fixture<DbArticle>> {
     ]
   );
 
-  return { element: article, destroy: getArticleCleanup(article.article_id) };
+  return article;
 }

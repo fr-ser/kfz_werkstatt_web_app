@@ -2,7 +2,7 @@ import * as faker from "faker";
 
 import { DbOrder, DbPaymentMethod, DbOrderState } from "@backend/interfaces/db";
 
-import { _test_pool } from "@tests/factory/factory";
+import { test_pool } from "@tests/factory/factory";
 import { createCar } from "@tests/factory/car";
 import { createClient } from "@tests/factory/client";
 import { getRandomDate, getRandomEnumValue } from "@tests/helpers";
@@ -24,7 +24,7 @@ export async function createOrder(): Promise<DbOrder> {
     milage: faker.random.number(),
   };
 
-  await _test_pool.query(
+  await test_pool.query(
     `
         INSERT INTO order_ (
           order_id, car_id, client_id, title, date, payment_due_date, payment_method, state,

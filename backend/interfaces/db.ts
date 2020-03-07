@@ -15,7 +15,7 @@ export interface DbClient {
 
 export interface DbCar {
   car_id: string;
-  license_plate_numer: string;
+  license_plate: string;
   manufacturer: string;
   model: string;
   first_registration?: string;
