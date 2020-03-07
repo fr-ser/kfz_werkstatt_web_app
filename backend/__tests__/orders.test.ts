@@ -3,28 +3,22 @@ import { _pool } from "@backend/db/db";
 
 import { DbOrder } from "@backend/interfaces/db";
 
-import { Fixture } from "@tests/factory/factory";
+import { db_cleanup } from "@tests/factory/factory";
 import { createOrder } from "@tests/factory/order";
 import { getAuthHeader } from "@tests/helpers";
 
 describe("orders", () => {
-  let factories: Fixture<DbOrder>[] = [];
-
   beforeAll(async () => {
     await server.ready();
   });
 
-  afterEach(async () => {
-    for (const factory of factories) {
-      await factory.destroy();
-    }
-    factories = [];
+  beforeEach(async () => {
+    await db_cleanup();
   });
-
   describe("api/orders", () => {
     it("returns the list of orders", async () => {
-      factories.push(await createOrder());
-      factories.push(await createOrder());
+      await createOrder();
+      await createOrder();
 
       const response = await server.inject({
         method: "GET",
@@ -39,30 +33,29 @@ describe("orders", () => {
 
     it("returns correct order properties", async () => {
       const order = await createOrder();
-      factories.push(order);
+      order;
 
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
         url: "/api/orders",
       });
-      expect(response.payload).toEqual(JSON.stringify([order.element]));
+      expect(response.payload).toEqual(JSON.stringify([order]));
     });
   });
 
   describe("api/orders/<order_id>", () => {
     it("returns the the order", async () => {
       const order = await createOrder();
-      factories.push(order);
 
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
-        url: `/api/orders/${order.element.order_id}`,
+        url: `/api/orders/${order.order_id}`,
       });
 
       expect(response.statusCode).toEqual(200);
-      expect(response.payload).toEqual(JSON.stringify(order.element));
+      expect(response.payload).toEqual(JSON.stringify(order));
     });
 
     it("returns the 404 for non existing orders", async () => {

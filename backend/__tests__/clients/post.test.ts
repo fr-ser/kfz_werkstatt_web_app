@@ -5,7 +5,8 @@ import server from "@backend/server";
 import { getClients } from "@backend/db/clients";
 
 import { getAuthHeader } from "@tests/helpers";
-import { cleanupClients, createClient } from "@tests/factory/client";
+import { db_cleanup } from "@tests/factory/factory";
+import { createClient } from "@tests/factory/client";
 
 describe("clients", () => {
   const requiredProperties = ["client_id", "first_name", "last_name"];
@@ -28,8 +29,8 @@ describe("clients", () => {
     await server.ready();
   });
 
-  afterEach(async () => {
-    await cleanupClients();
+  beforeEach(async () => {
+    await db_cleanup();
   });
 
   describe("post client", () => {
@@ -61,7 +62,7 @@ describe("clients", () => {
     });
 
     it("returns the 422 for database errors (duplicate key)", async () => {
-      const existingClient = (await createClient()).element;
+      const existingClient = await createClient();
       const response = await server.inject({
         method: "POST",
         headers: { ...getAuthHeader() },

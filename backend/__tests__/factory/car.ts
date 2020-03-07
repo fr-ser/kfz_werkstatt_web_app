@@ -2,16 +2,10 @@ import * as faker from "faker";
 
 import { DbCar } from "@backend/interfaces/db";
 
-import { Fixture, _test_pool } from "@tests/factory/factory";
+import { _test_pool } from "@tests/factory/factory";
 import { getRandomDate } from "@tests/helpers";
 
-function getCarCleanup(carId: string) {
-  return async function() {
-    await _test_pool.query(`DELETE FROM car WHERE car_id = $1`, [carId]);
-  };
-}
-
-export async function createCar(): Promise<Fixture<DbCar>> {
+export async function createCar(): Promise<DbCar> {
   const car = {
     car_id: `A${Date.now()}`,
     license_plate_numer: faker.random.alphaNumeric(10),
@@ -67,5 +61,5 @@ export async function createCar(): Promise<Fixture<DbCar>> {
     ]
   );
 
-  return { element: car, destroy: getCarCleanup(car.car_id) };
+  return car;
 }

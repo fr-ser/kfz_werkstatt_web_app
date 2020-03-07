@@ -2,20 +2,10 @@ import * as faker from "faker";
 
 import { DbClient } from "@backend/interfaces/db";
 
-import { Fixture, _test_pool } from "@tests/factory/factory";
+import { _test_pool } from "@tests/factory/factory";
 import { getRandomDate } from "@tests/helpers";
 
-export async function cleanupClients() {
-  await _test_pool.query(`TRUNCATE TABLE client CASCADE`);
-}
-
-function getClientCleanup(clientId: string) {
-  return async function() {
-    await _test_pool.query(`DELETE FROM client WHERE client_id = $1`, [clientId]);
-  };
-}
-
-export async function createClient(): Promise<Fixture<DbClient>> {
+export async function createClient(): Promise<DbClient> {
   const client = {
     client_id: `K${Date.now()}`,
     first_name: faker.name.firstName(),
@@ -54,5 +44,5 @@ export async function createClient(): Promise<Fixture<DbClient>> {
     ]
   );
 
-  return { element: client, destroy: getClientCleanup(client.client_id) };
+  return client;
 }

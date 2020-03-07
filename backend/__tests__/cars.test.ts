@@ -1,30 +1,25 @@
 import server from "@backend/server";
 import { _pool } from "@backend/db/db";
 
-import { DbCar } from "@backend/interfaces/db";
-
 import { getAuthHeader } from "@tests/helpers";
-import { Fixture } from "@tests/factory/factory";
+import { db_cleanup } from "@tests/factory/factory";
 import { createCar } from "@tests/factory/car";
 
 describe("cars", () => {
-  let factories: Fixture<DbCar>[] = [];
-
   beforeAll(async () => {
     await server.ready();
   });
 
-  afterEach(async () => {
-    for (const factory of factories) {
-      await factory.destroy();
-    }
-    factories = [];
+  beforeEach(async () => {
+    await db_cleanup();
   });
 
   describe("api/cars", () => {
     it("returns the list of cars", async () => {
-      factories.push(await createCar());
-      factories.push(await createCar());
+      await db_cleanup();
+
+      await createCar();
+      await createCar();
 
       const response = await server.inject({
         method: "GET",
@@ -39,30 +34,28 @@ describe("cars", () => {
 
     it("returns correct car properties", async () => {
       const car = await createCar();
-      factories.push(car);
 
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
         url: "/api/cars",
       });
-      expect(response.payload).toEqual(JSON.stringify([car.element]));
+      expect(response.payload).toEqual(JSON.stringify([car]));
     });
   });
 
   describe("api/cars/<car_id>", () => {
     it("returns the the car", async () => {
       const car = await createCar();
-      factories.push(car);
 
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
-        url: `/api/cars/${car.element.car_id}`,
+        url: `/api/cars/${car.car_id}`,
       });
 
       expect(response.statusCode).toEqual(200);
-      expect(response.payload).toEqual(JSON.stringify(car.element));
+      expect(response.payload).toEqual(JSON.stringify(car));
     });
 
     it("returns the 404 for non existing cars", async () => {

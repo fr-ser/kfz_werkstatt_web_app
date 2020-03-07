@@ -1,29 +1,22 @@
 import server from "@backend/server";
 
-import { DbClient } from "@backend/interfaces/db";
-
-import { Fixture } from "@tests/factory/factory";
 import { createClient } from "@tests/factory/client";
+import { db_cleanup } from "@tests/factory/factory";
 import { getAuthHeader } from "@tests/helpers";
 
 describe("get clients", () => {
-  let factories: Fixture<DbClient>[] = [];
-
   beforeAll(async () => {
     await server.ready();
   });
 
-  afterEach(async () => {
-    for (const factory of factories) {
-      await factory.destroy();
-    }
-    factories = [];
+  beforeEach(async () => {
+    await db_cleanup();
   });
 
   describe("client list", () => {
     it("returns the list of clients", async () => {
-      factories.push(await createClient());
-      factories.push(await createClient());
+      await createClient();
+      await createClient();
 
       const response = await server.inject({
         method: "GET",
@@ -38,30 +31,28 @@ describe("get clients", () => {
 
     it("returns correct client properties", async () => {
       const client = await createClient();
-      factories.push(client);
 
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
         url: "/api/clients",
       });
-      expect(response.payload).toEqual(JSON.stringify([client.element]));
+      expect(response.payload).toEqual(JSON.stringify([client]));
     });
   });
 
   describe("single client", () => {
     it("returns the the client", async () => {
       const client = await createClient();
-      factories.push(client);
 
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
-        url: `/api/clients/${client.element.client_id}`,
+        url: `/api/clients/${client.client_id}`,
       });
 
       expect(response.statusCode).toEqual(200);
-      expect(response.payload).toEqual(JSON.stringify(client.element));
+      expect(response.payload).toEqual(JSON.stringify(client));
     });
 
     it("returns the 404 for non existing clients", async () => {
