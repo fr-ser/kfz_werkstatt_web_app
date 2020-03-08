@@ -1,7 +1,7 @@
-import { _pool } from "@backend/db/db";
-import { DbClient } from "@backend/interfaces/db";
-import { ApiClient } from "@backend/interfaces/api";
+import { _pool, executeWithTransaction } from "@backend/db/db";
+import { GetClient, SaveClient } from "@backend/interfaces/api";
 import { NotFoundError } from "@backend/common";
+import { PoolClient } from "pg";
 
 const apiClientQuery = `
   WITH dict_base AS (
@@ -17,7 +17,7 @@ const apiClientQuery = `
   LEFT JOIN owned_cars using(client_id)
 `;
 
-export async function getClient(clientId: string): Promise<ApiClient> {
+export async function getClient(clientId: string): Promise<GetClient> {
   let maybe_client = await _pool.query(apiClientQuery + "WHERE client_id = $1", [clientId]);
   if (maybe_client.rowCount === 1) {
     return maybe_client.rows[0];
@@ -26,7 +26,7 @@ export async function getClient(clientId: string): Promise<ApiClient> {
   }
 }
 
-export async function getClients(): Promise<ApiClient[]> {
+export async function getClients(): Promise<GetClient[]> {
   return (await _pool.query(apiClientQuery)).rows;
 }
 
@@ -43,8 +43,8 @@ export async function deleteClient(clientId: string) {
   }
 }
 
-export async function saveClient(client: DbClient) {
-  await _pool.query(
+async function _saveClient(pgClient: PoolClient, client: SaveClient) {
+  await pgClient.query(
     `
         INSERT INTO client (
             client_id, first_name, last_name, email, phone_number, company_name,
@@ -66,5 +66,26 @@ export async function saveClient(client: DbClient) {
       client.street_and_number,
     ]
   );
-  return getClient(client.client_id);
+
+  if (client.car_ids) {
+    const query_args = client.car_ids.reduce(
+      (acc, carId, idx) => {
+        // arguments are a bit tricky because the client id needs to
+        // go to each carId (thats why we double the index)
+        acc.args.push(carId, client.client_id);
+        acc.ordinals.push(`($${idx * 2 + 1}, $${idx * 2 + 2})`);
+        return acc;
+      },
+      { ordinals: [] as string[], args: [] as string[] }
+    );
+
+    await pgClient.query(
+      `INSERT INTO car_ownership (car_id, client_id) VALUES ${query_args.ordinals.join(", ")}`,
+      query_args.args
+    );
+  }
+}
+
+export async function saveClient(client: SaveClient) {
+  await executeWithTransaction(_saveClient, [client]);
 }

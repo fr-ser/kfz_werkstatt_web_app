@@ -14,5 +14,6 @@ export const bodyJsonSchema = {
     zip_code: { type: "number" },
     city: { type: "string" },
     street_and_number: { type: "string" },
+    car_ids: { type: "array", items: { type: "string" }, minItems: 1 },
   },
 };

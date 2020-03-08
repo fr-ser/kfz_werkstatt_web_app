@@ -3,7 +3,8 @@ import { getClient, getClients, deleteClient, saveClient } from "@backend/db/cli
 
 import { createClient } from "@tests/factory/client";
 import { createCar } from "@tests/factory/car";
-import { db_cleanup, test_pool } from "@tests/factory/factory";
+import { db_cleanup } from "@tests/factory/factory";
+import { getCarsOfClient, getClientCount, clientExists } from "@tests/clients/helpers";
 
 describe("clients - database queries", () => {
   beforeEach(async () => {
@@ -118,8 +119,9 @@ describe("clients - database queries", () => {
       fail("nothing thrown");
     });
   });
+
   describe("saveClient", () => {
-    it("saves a client", async () => {
+    it("saves a client with no cars", async () => {
       const clientId = "sth";
       expect(await clientExists(clientId)).toBe(false);
 
@@ -140,18 +142,39 @@ describe("clients - database queries", () => {
       }
       fail("nothing thrown");
     });
+
+    it("saves a client with two cars", async () => {
+      const car1 = await createCar();
+      const car2 = await createCar();
+      const clientId = "sth";
+      expect(await clientExists(clientId)).toBe(false);
+
+      await saveClient({
+        client_id: clientId,
+        first_name: "first_name",
+        last_name: "last_name",
+        car_ids: [car1.car_id, car2.car_id],
+      });
+
+      expect(await clientExists(clientId)).toBe(true);
+      expect(await getCarsOfClient(clientId)).toEqual(new Set([car1.car_id, car2.car_id]));
+    });
+
+    const invalidPayloads: any[] = [
+      {},
+      { client_id: "a", first_name: "a", last_name: "a", car_ids: [] },
+      { client_id: "a", first_name: "a", last_name: "a", car_ids: ["not_existing"] },
+    ];
+    for (const payload of invalidPayloads) {
+      it("throws an error if the client cannot be saved", async () => {
+        try {
+          await saveClient(payload);
+        } catch (error) {
+          expect(await getClientCount()).toBe(0);
+          return;
+        }
+        fail("nothing thrown");
+      });
+    }
   });
 });
-
-async function getClientCount(): Promise<number> {
-  const result = await test_pool.query("SELECT count(*)::INTEGER as count_ FROM client");
-  return result.rows[0].count_;
-}
-
-async function clientExists(clientId: string): Promise<boolean> {
-  const result = await test_pool.query(
-    `SELECT EXISTS(SELECT 1 FROM client WHERE client_id = $1) as exists_`,
-    [clientId]
-  );
-  return result.rows[0].exists_;
-}
