@@ -1,7 +1,8 @@
+import { PoolClient, Pool } from "pg";
+
 import { _pool, executeWithTransaction } from "@backend/db/db";
 import { GetClient, SaveClient, EditClient } from "@backend/interfaces/api";
 import { NotFoundError } from "@backend/common";
-import { PoolClient } from "pg";
 
 const apiClientQuery = `
   WITH dict_base AS (
@@ -30,15 +31,22 @@ export async function getClients(): Promise<GetClient[]> {
   return (await _pool.query(apiClientQuery)).rows;
 }
 
-export async function deleteClient(clientId: string) {
-  const clientExists = (
-    await _pool.query("SELECT EXISTS(SELECT 1 FROM client WHERE client_id = $1) as exists_", [
-      clientId,
-    ])
-  ).rows[0].exists_;
+export async function clientExists(
+  pgClient: PoolClient | Pool,
+  clientId: string
+): Promise<boolean> {
+  const result = await pgClient.query(
+    "SELECT EXISTS(SELECT 1 FROM client WHERE client_id = $1) as exists_",
+    [clientId]
+  );
 
-  if (!clientExists) throw new NotFoundError(`Could not find client with id ${clientId}`);
-  else {
+  return result.rows[0].exists_;
+}
+
+export async function deleteClient(clientId: string) {
+  if (!(await clientExists(_pool, clientId))) {
+    throw new NotFoundError(`Could not find client with id ${clientId}`);
+  } else {
     await _pool.query("DELETE FROM client WHERE client_id = $1", [clientId]);
   }
 }
@@ -93,7 +101,11 @@ async function _editClient(pgClient: PoolClient, clientId: string, newProperties
 }
 
 export async function editClient(clientId: string, newProperties: EditClient) {
-  await executeWithTransaction(_editClient, [clientId, newProperties]);
+  if (!(await clientExists(_pool, clientId))) {
+    throw new NotFoundError(`Could not find client with id ${clientId}`);
+  } else {
+    await executeWithTransaction(_editClient, [clientId, newProperties]);
+  }
 }
 
 async function _saveClient(pgClient: PoolClient, client: SaveClient) {

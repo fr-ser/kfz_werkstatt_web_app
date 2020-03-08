@@ -4,7 +4,7 @@ import { getCarsOfClient, getDbClient } from "@tests/clients/helpers";
 import { getAuthHeader } from "@tests/helpers";
 import { db_cleanup } from "@tests/factory/factory";
 import { createClient } from "@tests/factory/client";
-import { createCar } from "../factory/car";
+import { createCar } from "@tests/factory/car";
 
 describe("clients - PUT", () => {
   beforeAll(async () => {

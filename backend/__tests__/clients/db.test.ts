@@ -120,6 +120,47 @@ describe("clients - database queries", () => {
     });
   });
 
+  describe("saveClient", () => {
+    it("saves a client with no cars", async () => {
+      const clientId = "sth";
+      expect(await clientExists(clientId)).toBe(false);
+
+      await saveClient({
+        client_id: clientId,
+        first_name: "first_name",
+        last_name: "last_name",
+      });
+
+      expect(await clientExists(clientId)).toBe(true);
+    });
+
+    it("throws an error if the client cannot be saved", async () => {
+      try {
+        await saveClient({} as any);
+      } catch (error) {
+        return;
+      }
+      fail("nothing thrown");
+    });
+
+    it("saves a client with two cars", async () => {
+      const car1 = await createCar();
+      const car2 = await createCar();
+      const clientId = "sth";
+      expect(await clientExists(clientId)).toBe(false);
+
+      await saveClient({
+        client_id: clientId,
+        first_name: "first_name",
+        last_name: "last_name",
+        car_ids: [car1.car_id, car2.car_id],
+      });
+
+      expect(await clientExists(clientId)).toBe(true);
+      expect(await getCarsOfClient(clientId)).toEqual(new Set([car1.car_id, car2.car_id]));
+    });
+  });
+
   describe("editClient", () => {
     const changeableStringProperties = [
       "first_name",
@@ -179,6 +220,25 @@ describe("clients - database queries", () => {
       expect(await getCarsOfClient(client.client_id)).toEqual(new Set([car.car_id]));
     });
 
+    it("throws an error if the client cannot be edited", async () => {
+      try {
+        await editClient("asdf", { x: "y" } as any);
+      } catch (error) {
+        return;
+      }
+      fail("nothing thrown");
+    });
+
+    it("throws the NotFoundError if the client does not exist", async () => {
+      try {
+        await editClient("not_existing", {} as any);
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundError);
+        return;
+      }
+      fail("nothing thrown");
+    });
+
     describe("change car ownership", () => {
       it("adds a car ownership", async () => {
         const car = await createCar();
@@ -192,8 +252,7 @@ describe("clients - database queries", () => {
       });
 
       it("deletes a car ownership", async () => {
-        const car = await createCar();
-        const client = await createClient([car.car_id]);
+        const client = await createClient([(await createCar()).car_id]);
 
         await editClient(client.client_id, {
           car_ids: [],
@@ -203,57 +262,15 @@ describe("clients - database queries", () => {
       });
 
       it("edits a car ownership", async () => {
-        const car1 = await createCar();
-        const car2 = await createCar();
-        const client = await createClient([car1.car_id]);
+        const newCar = await createCar();
+        const client = await createClient([(await createCar()).car_id]);
 
         await editClient(client.client_id, {
-          car_ids: [car2.car_id],
+          car_ids: [newCar.car_id],
         });
 
-        expect(await getCarsOfClient(client.client_id)).toEqual(new Set([car2.car_id]));
+        expect(await getCarsOfClient(client.client_id)).toEqual(new Set([newCar.car_id]));
       });
-    });
-  });
-
-  describe("saveClient", () => {
-    it("saves a client with no cars", async () => {
-      const clientId = "sth";
-      expect(await clientExists(clientId)).toBe(false);
-
-      await saveClient({
-        client_id: clientId,
-        first_name: "first_name",
-        last_name: "last_name",
-      });
-
-      expect(await clientExists(clientId)).toBe(true);
-    });
-
-    it("throws an error if the client cannot be saved", async () => {
-      try {
-        await saveClient({} as any);
-      } catch (error) {
-        return;
-      }
-      fail("nothing thrown");
-    });
-
-    it("saves a client with two cars", async () => {
-      const car1 = await createCar();
-      const car2 = await createCar();
-      const clientId = "sth";
-      expect(await clientExists(clientId)).toBe(false);
-
-      await saveClient({
-        client_id: clientId,
-        first_name: "first_name",
-        last_name: "last_name",
-        car_ids: [car1.car_id, car2.car_id],
-      });
-
-      expect(await clientExists(clientId)).toBe(true);
-      expect(await getCarsOfClient(clientId)).toEqual(new Set([car1.car_id, car2.car_id]));
     });
   });
 });

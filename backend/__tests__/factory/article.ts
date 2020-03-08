@@ -15,9 +15,9 @@ export async function createArticle(): Promise<DbArticle> {
 
   await test_pool.query(
     `
-        INSERT INTO article (
-            article_id, description, article_number, stock_amount, price
-        ) VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO article (
+          article_id, description, article_number, stock_amount, price
+      ) VALUES ($1, $2, $3, $4, $5)
     `,
     [
       article.article_id,

@@ -5,7 +5,7 @@ import { DbCar } from "@backend/interfaces/db";
 import { test_pool } from "@tests/factory/factory";
 import { getRandomDate } from "@tests/helpers";
 
-export async function createCar(): Promise<DbCar> {
+export async function createCar(ownerIds?: string[]): Promise<DbCar> {
   const car = {
     car_id: `A${Date.now()}`,
     license_plate: faker.random.alphaNumeric(10),
@@ -30,13 +30,13 @@ export async function createCar(): Promise<DbCar> {
 
   await test_pool.query(
     `
-        INSERT INTO car (
-          car_id, license_plate, manufacturer, model, first_registration, color,
-          displacement, comment, fuel, performance, oil_change_date, oil_change_mileage, tires,
-          tuev_date, vin, to_2, to_3, timing_belt_date, timing_belt_mileage
-        ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
-        )
+      INSERT INTO car (
+        car_id, license_plate, manufacturer, model, first_registration, color,
+        displacement, comment, fuel, performance, oil_change_date, oil_change_mileage, tires,
+        tuev_date, vin, to_2, to_3, timing_belt_date, timing_belt_mileage
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
+      )
     `,
     [
       car.car_id,
@@ -60,6 +60,24 @@ export async function createCar(): Promise<DbCar> {
       car.timing_belt_mileage,
     ]
   );
+
+  if (ownerIds && ownerIds.length) {
+    const query_args = ownerIds.reduce(
+      (acc, ownerId, idx) => {
+        // arguments are a bit tricky because the client id needs to
+        // go to each ownerId (thats why we double the idx)
+        acc.args.push(car.car_id, ownerId);
+        acc.ordinals.push(`($${idx * 2 + 1}, $${idx * 2 + 2})`);
+        return acc;
+      },
+      { ordinals: [] as string[], args: [] as string[] }
+    );
+
+    await test_pool.query(
+      `INSERT INTO car_ownership (car_id, client_id) VALUES ${query_args.ordinals.join(", ")}`,
+      query_args.args
+    );
+  }
 
   return car;
 }

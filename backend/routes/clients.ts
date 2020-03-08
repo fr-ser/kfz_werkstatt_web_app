@@ -28,7 +28,7 @@ const getClientRoute: fastify.RouteOptions = {
       if (error instanceof NotFoundError) {
         reply.code(404).send({ msg: error.toString() });
       } else {
-        reply.code(500).send({ msg: error.toString() });
+        throw error;
       }
       return;
     }
@@ -88,6 +88,7 @@ const putClientsRoute: RouteOptionsWithBody<EditClient> = {
     reply.code(200).send();
   },
 };
+
 export default fp(async (server, opts, next) => {
   server.route(getClientsRoute);
   server.route(getClientRoute);

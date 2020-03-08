@@ -1,4 +1,4 @@
-import { pick, omit } from "lodash";
+import { omit } from "lodash";
 
 import server from "@backend/server";
 
@@ -6,7 +6,7 @@ import { getDbClient, getCarsOfClient, getClientCount } from "@tests/clients/hel
 import { getAuthHeader } from "@tests/helpers";
 import { db_cleanup } from "@tests/factory/factory";
 import { createClient } from "@tests/factory/client";
-import { createCar } from "../factory/car";
+import { createCar } from "@tests/factory/car";
 
 describe("clients - POST", () => {
   beforeAll(async () => {
@@ -19,7 +19,7 @@ describe("clients - POST", () => {
 
   it("creates a client for a valid payload", async () => {
     const payload = {
-      client_id: "some_id",
+      client_id: "K123",
       first_name: "first",
       last_name: "last",
       email: "me@mail.com",
@@ -50,7 +50,7 @@ describe("clients - POST", () => {
 
   it("creates a client for a minimal payload", async () => {
     const payload = {
-      client_id: "some_id",
+      client_id: "K123",
       first_name: "first",
       last_name: "last",
     };
@@ -73,7 +73,7 @@ describe("clients - POST", () => {
   it("creates a client with a car", async () => {
     const car = await createCar();
     const payload = {
-      client_id: "some_id",
+      client_id: "K123",
       first_name: "first",
       last_name: "last",
       car_ids: [car.car_id],
@@ -97,11 +97,16 @@ describe("clients - POST", () => {
 
   it("returns 422 for database errors (duplicate key)", async () => {
     const existingClient = await createClient();
+    const payload = {
+      client_id: existingClient.client_id,
+      first_name: "first",
+      last_name: "last",
+    };
     const response = await server.inject({
       method: "POST",
       headers: { ...getAuthHeader() },
       url: `/api/clients`,
-      payload: pick(existingClient, ["client_id", "first_name", "last_name"]),
+      payload,
     });
 
     expect(response.statusCode).toEqual(422);
@@ -110,13 +115,14 @@ describe("clients - POST", () => {
 
   describe("invalid payload", () => {
     const validPayload = {
-      client_id: "some_id",
+      client_id: "K123",
       first_name: "first",
       last_name: "last",
     };
     const invalidPayloads = [
       {},
       { some: "weird stuff" },
+      { ...validPayload, client_id: "Kinvalid_id" },
       { ...validPayload, some: "valid and invalid stuff" },
       { ...validPayload, zip_code: 123456789 },
       { ...validPayload, car_ids: [] },
