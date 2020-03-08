@@ -20,7 +20,7 @@ describe("articles - PUT", () => {
     const response = await server.inject({
       method: "PUT",
       headers: { ...getAuthHeader() },
-      url: `/api/articles/${(await article).article_id}`,
+      url: `/api/articles/${article.article_id}`,
       payload: {
         description: "Esteban",
         article_number: "1990-12-31",

@@ -115,7 +115,7 @@ export async function saveCar(car: SaveCar) {
 
 async function _editCar(pgClient: PoolClient, carId: string, newProperties: EditCar) {
   const queryArgs = Object.entries(newProperties).reduce(
-    (acc, [property, value], idx) => {
+    (acc, [property, value]) => {
       if (property === "owner_ids") return acc;
 
       acc.arguments.push(value);

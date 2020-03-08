@@ -90,16 +90,20 @@ describe("articles - database queries", () => {
   });
 
   describe("saveArticle", () => {
-    it("saves an article with no articles", async () => {
+    it("saves an article", async () => {
       const articleId = "sth";
       expect(await articleExists(articleId)).toBe(false);
 
-      await saveArticle({
+      const payload = {
         article_id: articleId,
         description: "B-12-12",
-      });
+      };
+      await saveArticle(payload);
 
-      expect(await articleExists(articleId)).toBe(true);
+      const dbOrder = await getDbArticle(articleId);
+      for (const [key, value] of Object.entries(payload)) {
+        expect((dbOrder as any)[key]).toEqual(value);
+      }
     });
 
     it("throws an error if the article cannot be saved", async () => {

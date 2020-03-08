@@ -127,14 +127,18 @@ describe("cars - database queries", () => {
       const carId = "sth";
       expect(await carExists(carId)).toBe(false);
 
-      await saveCar({
+      const payload = {
         car_id: carId,
         license_plate: "B-12-12",
         manufacturer: "BMW",
         model: "A1",
-      });
+      };
+      await saveCar(payload);
 
-      expect(await carExists(carId)).toBe(true);
+      const dbOrder = await getDbCar(carId);
+      for (const [key, value] of Object.entries(payload)) {
+        expect((dbOrder as any)[key]).toEqual(value);
+      }
     });
 
     it("saves a car with two cars", async () => {

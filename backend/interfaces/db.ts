@@ -62,10 +62,27 @@ export interface DbOrder {
   payment_due_date: string;
   payment_method: DbPaymentMethod;
   state: DbOrderState;
+
   description?: string;
-  milage?: number;
-  // positionen: Array<AuftragsPosition>;
-  // dokumente: Array<string>;
+  mileage?: number;
+}
+
+export interface DbOrderItemHeader {
+  id: number;
+  order_id: string;
+  position: number;
+  header: string;
+}
+
+export interface DbOrderItemArticle {
+  id: number;
+  order_id: string;
+  article_id: string;
+  position: number;
+  description: string;
+  amount: number;
+  price_per_item: number;
+  discount: number;
 }
 
 export enum DbDocumentType {

@@ -5,11 +5,25 @@ export function getAuthHeader() {
   return { Authorization: `Basic ${encoded_credentials}` };
 }
 
-export function getRandomDate() {
+export function getRandomDate(): string {
   return faker.date
     .past()
     .toISOString()
     .substr(0, 10);
+}
+
+export function getRandomArticleId(length = 15): string {
+  let result = "";
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ" +
+    "abcdefghijklmnopqrstuvwxyzäöüß" +
+    "0123456789" +
+    ".:,;-_/\\|";
+
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
 }
 
 export function getRandomEnumValue<T>(enumObject: { [key: string]: T }): T {

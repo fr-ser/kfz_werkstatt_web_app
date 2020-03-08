@@ -66,9 +66,25 @@ CREATE TABLE order_ (
     ,   payment_method payment_method NOT NULL
     ,   state order_state NOT NULL
     ,   description TEXT
-    ,   milage NUMERIC
-    -- ,   positionen Array<AuftragsPosition>
-    -- ,   dokumente Array<string>
+    ,   mileage NUMERIC
+);
+
+CREATE TABLE order_item_header (
+    id SERIAL PRIMARY KEY
+    ,   order_id TEXT NOT NULL REFERENCES order_(order_id)
+    ,   position INTEGER NOT NULL
+    ,   header TEXT NOT NULL
+);
+CREATE TABLE order_item_article (
+    id SERIAL PRIMARY KEY
+    ,   order_id TEXT NOT NULL REFERENCES order_(order_id)
+    -- can come from article table but does not have to
+    ,   article_id TEXT NOT NULL
+    ,   position INTEGER NOT NULL
+    ,   description TEXT NOT NULL
+    ,   amount NUMERIC NOT NULL
+    ,   price_per_item NUMERIC NOT NULL
+    ,   discount NUMERIC NOT NULL
 );
 
 

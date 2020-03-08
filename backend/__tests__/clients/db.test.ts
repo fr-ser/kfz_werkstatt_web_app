@@ -125,13 +125,17 @@ describe("clients - database queries", () => {
       const clientId = "sth";
       expect(await clientExists(clientId)).toBe(false);
 
-      await saveClient({
+      const payload = {
         client_id: clientId,
         first_name: "first_name",
         last_name: "last_name",
-      });
+      };
+      await saveClient(payload);
 
-      expect(await clientExists(clientId)).toBe(true);
+      const dbOrder = await getDbClient(clientId);
+      for (const [key, value] of Object.entries(payload)) {
+        expect((dbOrder as any)[key]).toEqual(value);
+      }
     });
 
     it("throws an error if the client cannot be saved", async () => {
