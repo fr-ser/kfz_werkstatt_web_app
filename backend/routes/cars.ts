@@ -10,7 +10,7 @@ import { saveSchema, editSchema } from "@backend/routes/schemas/cars";
 const getCarsRoute: fastify.RouteOptions = {
   url: "/api/cars",
   method: ["GET"],
-  handler: async (request, reply) => {
+  handler: async (_, reply) => {
     return reply.send(await getCars());
   },
 };
@@ -88,7 +88,7 @@ const putCarsRoute: RouteOptionsWithBody<EditCar> = {
   },
 };
 
-export default fp(async (server, opts, next) => {
+export default fp(async (server, _, next) => {
   server.route(getCarsRoute);
   server.route(getCarRoute);
   server.route(deleteCarRoute);

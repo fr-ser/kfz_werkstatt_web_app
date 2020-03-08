@@ -1,11 +1,11 @@
 import server from "@backend/server";
-import { _pool } from "@backend/db/db";
 
 import { createArticle } from "@tests/factory/article";
-import { getAuthHeader } from "@tests/helpers";
 import { db_cleanup } from "@tests/factory/factory";
+import { getAuthHeader } from "@tests/helpers";
+import { GetArticle } from "@backend/interfaces/api";
 
-describe("articles", () => {
+describe("articles - GET", () => {
   beforeAll(async () => {
     await server.ready();
   });
@@ -14,7 +14,7 @@ describe("articles", () => {
     await db_cleanup();
   });
 
-  describe("api/articles", () => {
+  describe("article list", () => {
     it("returns the list of articles", async () => {
       await createArticle();
       await createArticle();
@@ -31,29 +31,48 @@ describe("articles", () => {
     });
 
     it("returns correct article properties", async () => {
-      const article = await createArticle();
+      const dbArticle = await createArticle();
 
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
         url: "/api/articles",
       });
-      expect(response.payload).toEqual(JSON.stringify([article]));
+
+      expect(response.statusCode).toEqual(200);
+
+      const apiArticle: GetArticle = JSON.parse(response.payload)[0];
+      for (const key of Object.keys(dbArticle)) {
+        expect((dbArticle as any)[key]).toEqual((apiArticle as any)[key]);
+      }
+    });
+
+    it("returns an empty list without errors", async () => {
+      const response = await server.inject({
+        method: "GET",
+        headers: { ...getAuthHeader() },
+        url: "/api/articles",
+      });
+      expect(response.payload).toEqual(JSON.stringify([]));
     });
   });
 
-  describe("api/articles/<article_id>", () => {
+  describe("single article", () => {
     it("returns the the article", async () => {
-      const article = await createArticle();
+      const dbArticle = await createArticle();
 
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
-        url: `/api/articles/${article.article_id}`,
+        url: `/api/articles/${dbArticle.article_id}`,
       });
 
       expect(response.statusCode).toEqual(200);
-      expect(response.payload).toEqual(JSON.stringify(article));
+
+      const apiArticle: GetArticle = JSON.parse(response.payload);
+      for (const key of Object.keys(dbArticle)) {
+        expect((dbArticle as any)[key]).toEqual((apiArticle as any)[key]);
+      }
     });
 
     it("returns the 404 for non existing articles", async () => {

@@ -89,7 +89,7 @@ const putClientsRoute: RouteOptionsWithBody<EditClient> = {
   },
 };
 
-export default fp(async (server, opts, next) => {
+export default fp(async (server, _, next) => {
   server.route(getClientsRoute);
   server.route(getClientRoute);
   server.route(postClientsRoute);
