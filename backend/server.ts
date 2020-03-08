@@ -1,3 +1,4 @@
+import * as Ajv from "ajv";
 import * as fastify from "fastify";
 import * as fastifyBasicAuth from "fastify-basic-auth";
 
@@ -9,6 +10,15 @@ import orderRoutes from "@backend/routes/orders";
 import documentRoutes from "@backend/routes/documents";
 
 const server = fastify();
+
+// custom validator to allow `additionalProperties`
+const ajv = new Ajv({
+  useDefaults: true,
+  coerceTypes: true,
+  allErrors: true,
+  nullable: true,
+});
+server.setSchemaCompiler(schema => ajv.compile(schema));
 
 server.register(fastifyBasicAuth, { validate, authenticate: { realm: "kfz-werkstatt" } });
 

@@ -1,5 +1,5 @@
 import { _pool, executeWithTransaction } from "@backend/db/db";
-import { GetClient, SaveClient } from "@backend/interfaces/api";
+import { GetClient, SaveClient, EditClient } from "@backend/interfaces/api";
 import { NotFoundError } from "@backend/common";
 import { PoolClient } from "pg";
 
@@ -43,13 +43,66 @@ export async function deleteClient(clientId: string) {
   }
 }
 
+async function _maybeAssignCarsToClient(
+  pgClient: PoolClient,
+  client_id: string,
+  carIds?: string[]
+) {
+  if (carIds && carIds.length) {
+    const query_args = carIds.reduce(
+      (acc, carId, idx) => {
+        // arguments are a bit tricky because the client id needs to
+        // go to each carId (thats why we double the index)
+        acc.args.push(carId, client_id);
+        acc.ordinals.push(`($${idx * 2 + 1}, $${idx * 2 + 2})`);
+        return acc;
+      },
+      { ordinals: [] as string[], args: [] as string[] }
+    );
+
+    await pgClient.query(
+      `INSERT INTO car_ownership (car_id, client_id) VALUES ${query_args.ordinals.join(", ")}`,
+      query_args.args
+    );
+  }
+}
+
+async function _editClient(pgClient: PoolClient, clientId: string, newProperties: EditClient) {
+  const queryArgs = Object.entries(newProperties).reduce(
+    (acc, [property, value], idx) => {
+      if (property === "car_ids") return acc;
+
+      acc.arguments.push(value);
+      acc.query.push(`${property} = $${acc.arguments.length}`);
+      return acc;
+    },
+    { query: [] as string[], arguments: [clientId] as any[] }
+  );
+
+  if (queryArgs.query.length) {
+    await pgClient.query(
+      `UPDATE client SET ${queryArgs.query.join(", ")} WHERE client_id = $1`,
+      queryArgs.arguments
+    );
+  }
+
+  if (newProperties.car_ids) {
+    await pgClient.query(`DELETE FROM car_ownership WHERE client_id = $1`, [clientId]);
+    await _maybeAssignCarsToClient(pgClient, clientId, newProperties.car_ids);
+  }
+}
+
+export async function editClient(clientId: string, newProperties: EditClient) {
+  await executeWithTransaction(_editClient, [clientId, newProperties]);
+}
+
 async function _saveClient(pgClient: PoolClient, client: SaveClient) {
   await pgClient.query(
     `
-        INSERT INTO client (
-            client_id, first_name, last_name, email, phone_number, company_name,
-            birthday, comment, mobile_number, zip_code, city, street_and_number
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      INSERT INTO client (
+          client_id, first_name, last_name, email, phone_number, company_name,
+          birthday, comment, mobile_number, zip_code, city, street_and_number
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     `,
     [
       client.client_id,
@@ -67,23 +120,7 @@ async function _saveClient(pgClient: PoolClient, client: SaveClient) {
     ]
   );
 
-  if (client.car_ids) {
-    const query_args = client.car_ids.reduce(
-      (acc, carId, idx) => {
-        // arguments are a bit tricky because the client id needs to
-        // go to each carId (thats why we double the index)
-        acc.args.push(carId, client.client_id);
-        acc.ordinals.push(`($${idx * 2 + 1}, $${idx * 2 + 2})`);
-        return acc;
-      },
-      { ordinals: [] as string[], args: [] as string[] }
-    );
-
-    await pgClient.query(
-      `INSERT INTO car_ownership (car_id, client_id) VALUES ${query_args.ordinals.join(", ")}`,
-      query_args.args
-    );
-  }
+  await _maybeAssignCarsToClient(pgClient, client.client_id, client.car_ids);
 }
 
 export async function saveClient(client: SaveClient) {

@@ -32,3 +32,5 @@ export interface SaveClient {
   street_and_number?: string;
   car_ids?: string[];
 }
+
+export type EditClient = Partial<Omit<SaveClient, "client_id">>;

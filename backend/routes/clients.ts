@@ -1,12 +1,11 @@
 import * as fastify from "fastify";
 import * as fp from "fastify-plugin";
 
-import { getClient, getClients, saveClient, deleteClient } from "@backend/db/clients";
-import { bodyJsonSchema } from "@backend/routes/schemas/clients";
-import { DbClient } from "@backend/interfaces/db";
+import { getClient, getClients, saveClient, deleteClient, editClient } from "@backend/db/clients";
+import { saveSchema, editSchema } from "@backend/routes/schemas/clients";
 import { RouteOptionsWithBody } from "@backend/interfaces/helpers";
 import { NotFoundError } from "@backend/common";
-import { ApiClient } from "@backend/interfaces/api";
+import { SaveClient, GetClient, EditClient } from "@backend/interfaces/api";
 
 const getClientsRoute: fastify.RouteOptions = {
   url: "/api/clients",
@@ -22,7 +21,7 @@ const getClientRoute: fastify.RouteOptions = {
   method: ["GET"],
   handler: async (request, reply) => {
     const clientId = request.params.clientId;
-    let client: ApiClient;
+    let client: GetClient;
     try {
       client = await getClient(clientId);
     } catch (error) {
@@ -38,12 +37,10 @@ const getClientRoute: fastify.RouteOptions = {
   },
 };
 
-const postClientsRoute: RouteOptionsWithBody<DbClient> = {
+const postClientsRoute: RouteOptionsWithBody<SaveClient> = {
   url: "/api/clients",
   method: ["POST"],
-  schema: {
-    body: bodyJsonSchema,
-  },
+  schema: { body: saveSchema },
   handler: async (request, reply) => {
     try {
       await saveClient(request.body);
@@ -55,7 +52,7 @@ const postClientsRoute: RouteOptionsWithBody<DbClient> = {
   },
 };
 
-const deleteClientRoute: RouteOptionsWithBody<DbClient> = {
+const deleteClientRoute: fastify.RouteOptions = {
   url: "/api/clients/:clientId",
   method: ["DELETE"],
   handler: async (request, reply) => {
@@ -75,11 +72,28 @@ const deleteClientRoute: RouteOptionsWithBody<DbClient> = {
   },
 };
 
+const putClientsRoute: RouteOptionsWithBody<EditClient> = {
+  url: "/api/clients:clientId",
+  method: ["PUT"],
+  schema: { body: editSchema },
+  handler: async (request, reply) => {
+    const clientId = request.params.clientId;
+
+    try {
+      await editClient(clientId, request.body);
+    } catch (error) {
+      reply.code(422).send({ msg: error });
+      return;
+    }
+    reply.code(200).send();
+  },
+};
 export default fp(async (server, opts, next) => {
   server.route(getClientsRoute);
   server.route(getClientRoute);
   server.route(postClientsRoute);
   server.route(deleteClientRoute);
+  server.route(putClientsRoute);
 
   next();
 });

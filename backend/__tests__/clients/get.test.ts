@@ -1,10 +1,10 @@
 import server from "@backend/server";
-import { getClient } from "@backend/db/clients";
 
 import { createClient } from "@tests/factory/client";
 import { createCar } from "@tests/factory/car";
 import { db_cleanup } from "@tests/factory/factory";
 import { getAuthHeader } from "@tests/helpers";
+import { GetClient } from "@backend/interfaces/api";
 
 describe("clients - GET", () => {
   beforeAll(async () => {
@@ -34,14 +34,19 @@ describe("clients - GET", () => {
     it("returns correct client properties", async () => {
       const dbClient = await createClient();
 
-      const apiClient = await getClient(dbClient.client_id);
-
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
         url: "/api/clients",
       });
-      expect(response.payload).toEqual(JSON.stringify([apiClient]));
+
+      expect(response.statusCode).toEqual(200);
+
+      const apiClient: GetClient = JSON.parse(response.payload)[0];
+      for (const key of Object.keys(dbClient)) {
+        expect((dbClient as any)[key]).toEqual((apiClient as any)[key]);
+      }
+      expect(apiClient.cars).toEqual([]);
     });
 
     it("returns an empty list without errors", async () => {
@@ -58,9 +63,8 @@ describe("clients - GET", () => {
     it("returns the the client", async () => {
       const car1 = await createCar();
       const car2 = await createCar();
-      const dbClient = await createClient([car1.car_id, car2.car_id]);
-
-      const apiClient = await getClient(dbClient.client_id);
+      const ownedCarIds = [car1.car_id, car2.car_id];
+      const dbClient = await createClient(ownedCarIds);
 
       const response = await server.inject({
         method: "GET",
@@ -69,7 +73,12 @@ describe("clients - GET", () => {
       });
 
       expect(response.statusCode).toEqual(200);
-      expect(response.payload).toEqual(JSON.stringify(apiClient));
+
+      const apiClient: GetClient = JSON.parse(response.payload);
+      for (const key of Object.keys(dbClient)) {
+        expect((dbClient as any)[key]).toEqual((apiClient as any)[key]);
+      }
+      expect(new Set(apiClient.cars.map(val => val.car_id))).toEqual(new Set(ownedCarIds));
     });
 
     it("returns the 404 for non existing clients", async () => {

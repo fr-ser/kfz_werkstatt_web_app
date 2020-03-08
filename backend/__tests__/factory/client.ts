@@ -16,7 +16,7 @@ export async function createClient(carIds?: string[]): Promise<DbClient> {
     birthday: getRandomDate(),
     comment: faker.lorem.words(7),
     mobile_number: faker.phone.phoneNumber(),
-    zip_code: faker.random.number(99999),
+    zip_code: faker.random.number({ min: 1, max: 99999 }),
     city: faker.address.city(),
     street_and_number: faker.address.streetAddress(),
   };

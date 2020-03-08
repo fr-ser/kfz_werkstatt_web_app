@@ -1,4 +1,5 @@
 import { test_pool } from "@tests/factory/factory";
+import { DbClient } from "@backend/interfaces/db";
 
 export async function getCarsOfClient(clientId: string): Promise<Set<string>> {
   const result = await test_pool.query("SELECT car_id from car_ownership WHERE client_id = $1", [
@@ -18,4 +19,9 @@ export async function clientExists(clientId: string): Promise<boolean> {
     [clientId]
   );
   return result.rows[0].exists_;
+}
+
+export async function getDbClient(clientId: string): Promise<DbClient> {
+  const result = await test_pool.query(`SELECT * FROM client WHERE client_id = $1`, [clientId]);
+  return result.rows[0];
 }

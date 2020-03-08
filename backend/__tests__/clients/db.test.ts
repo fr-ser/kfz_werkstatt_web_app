@@ -1,10 +1,10 @@
 import { NotFoundError } from "@backend/common";
-import { getClient, getClients, deleteClient, saveClient } from "@backend/db/clients";
+import { getClient, getClients, deleteClient, saveClient, editClient } from "@backend/db/clients";
 
 import { createClient } from "@tests/factory/client";
 import { createCar } from "@tests/factory/car";
 import { db_cleanup } from "@tests/factory/factory";
-import { getCarsOfClient, getClientCount, clientExists } from "@tests/clients/helpers";
+import { getCarsOfClient, getClientCount, clientExists, getDbClient } from "@tests/clients/helpers";
 
 describe("clients - database queries", () => {
   beforeEach(async () => {
@@ -120,6 +120,102 @@ describe("clients - database queries", () => {
     });
   });
 
+  describe("editClient", () => {
+    const changeableStringProperties = [
+      "first_name",
+      "last_name",
+      "email",
+      "phone_number",
+      "company_name",
+      "comment",
+      "mobile_number",
+      "city",
+      "street_and_number",
+    ];
+    for (const changeProperty of changeableStringProperties) {
+      it(`changes the property: ${changeProperty}`, async () => {
+        const client = await createClient();
+
+        await editClient(client.client_id, { [changeProperty]: "newValue" });
+
+        const dbClient = await getDbClient(client.client_id);
+        expect((dbClient as any)[changeProperty]).toEqual("newValue");
+      });
+    }
+
+    it(`changes the property: zip_code`, async () => {
+      const client = await createClient();
+
+      await editClient(client.client_id, { zip_code: 12345 });
+
+      const dbClient = await getDbClient(client.client_id);
+      expect(dbClient.zip_code).toEqual(12345);
+    });
+
+    it(`changes the property: birthday`, async () => {
+      const client = await createClient();
+
+      await editClient(client.client_id, { birthday: "1990-12-31" });
+
+      const dbClient = await getDbClient(client.client_id);
+      expect(dbClient.birthday).toEqual("1990-12-31");
+    });
+
+    it("changes multiple properties at once", async () => {
+      const car = await createCar();
+      const client = await createClient();
+
+      await editClient(client.client_id, {
+        first_name: "Fernando",
+        zip_code: 12345,
+        birthday: "1990-12-31",
+        car_ids: [car.car_id],
+      });
+
+      const dbClient = await getDbClient(client.client_id);
+      expect(dbClient.first_name).toEqual("Fernando");
+      expect(dbClient.zip_code).toEqual(12345);
+      expect(dbClient.birthday).toEqual("1990-12-31");
+      expect(await getCarsOfClient(client.client_id)).toEqual(new Set([car.car_id]));
+    });
+
+    describe("change car ownership", () => {
+      it("adds a car ownership", async () => {
+        const car = await createCar();
+        const client = await createClient();
+
+        await editClient(client.client_id, {
+          car_ids: [car.car_id],
+        });
+
+        expect(await getCarsOfClient(client.client_id)).toEqual(new Set([car.car_id]));
+      });
+
+      it("deletes a car ownership", async () => {
+        const car = await createCar();
+        const client = await createClient([car.car_id]);
+
+        await editClient(client.client_id, {
+          car_ids: [],
+        });
+
+        expect(await getCarsOfClient(client.client_id)).toEqual(new Set());
+      });
+
+      it("edits a car ownership", async () => {
+        const car1 = await createCar();
+        const car2 = await createCar();
+        const client = await createClient([car1.car_id]);
+
+        await editClient(client.client_id, {
+          car_ids: [car2.car_id],
+        });
+
+        expect(await getCarsOfClient(client.client_id)).toEqual(new Set([car2.car_id]));
+      });
+    });
+  });
+
   describe("saveClient", () => {
     it("saves a client with no cars", async () => {
       const clientId = "sth";
@@ -159,22 +255,5 @@ describe("clients - database queries", () => {
       expect(await clientExists(clientId)).toBe(true);
       expect(await getCarsOfClient(clientId)).toEqual(new Set([car1.car_id, car2.car_id]));
     });
-
-    const invalidPayloads: any[] = [
-      {},
-      { client_id: "a", first_name: "a", last_name: "a", car_ids: [] },
-      { client_id: "a", first_name: "a", last_name: "a", car_ids: ["not_existing"] },
-    ];
-    for (const payload of invalidPayloads) {
-      it("throws an error if the client cannot be saved", async () => {
-        try {
-          await saveClient(payload);
-        } catch (error) {
-          expect(await getClientCount()).toBe(0);
-          return;
-        }
-        fail("nothing thrown");
-      });
-    }
   });
 });
