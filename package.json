@@ -2,6 +2,13 @@
   "name": "kfz_werkstatt_web_app",
   "version": "0.0.1",
   "description": "Web app for managing a specific automobile repair shop",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fr-ser/kfz_werkstatt_web_app.git"
+  },
+  "homepage": "https://github.com/fr-ser/kfz_werkstatt_web_app#readme",
+  "author": "Sergej Herbert",
+  "license": "Apache-2.0",
   "engines": {
     "node": "13.9.0",
     "npm": "6.13.7"
@@ -10,18 +17,8 @@
     "test": "npm run test:unit",
     "test:unit": "jest --runInBand",
     "test:tdd": "npm run test:unit -- --watch",
-    "start:dev": "nodemon -e ts -w backend --ignore '__tests__/' -x ts-node --project backend/tsconfig.json -r tsconfig-paths/register backend/index.ts"
+    "backend:dev": "nodemon -e ts -w backend --ignore '__tests__/' -x ts-node --project backend/tsconfig.json -r tsconfig-paths/register backend/index.ts"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/fr-ser/kfz_werkstatt_web_app.git"
-  },
-  "author": "Sergej Herbert",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/fr-ser/kfz_werkstatt_web_app/issues"
-  },
-  "homepage": "https://github.com/fr-ser/kfz_werkstatt_web_app#readme",
   "dependencies": {
     "fastify": "^2.12.0",
     "fastify-basic-auth": "^0.5.0",
