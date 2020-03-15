@@ -11,8 +11,6 @@ CREATE TABLE client (
     ,   zip_code INTEGER
     ,   city TEXT
     ,   street_and_number TEXT
-    -- ,   auftraege TEXT
-    -- ,   autos TEXT
 );
 
 CREATE TABLE car (
@@ -35,8 +33,6 @@ CREATE TABLE car (
     ,   to_3 TEXT
     ,   timing_belt_date DATE
     ,   timing_belt_mileage NUMERIC
-    -- kunden
-    -- auftraege
 );
 
 CREATE TABLE car_ownership (

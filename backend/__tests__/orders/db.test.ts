@@ -23,7 +23,7 @@ describe("orders - database queries", () => {
 
   describe("getOrder", () => {
     it("returns the order", async () => {
-      const dbOrder = await createOrder();
+      const dbOrder = await createOrder({ noPositions: true });
       const orderHeader = await createOrderItemHeader({ orderId: dbOrder.order_id, position: 1 });
       const orderArticle = await createOrderItemArticle({
         orderId: dbOrder.order_id,
@@ -68,11 +68,11 @@ describe("orders - database queries", () => {
     });
 
     it("returns all orders", async () => {
-      const dbOrder1 = await createOrder();
+      const dbOrder1 = await createOrder({ noPositions: true });
       const orderArticle = await createOrderItemArticle({
         orderId: dbOrder1.order_id,
       });
-      const dbOrder2 = await createOrder();
+      const dbOrder2 = await createOrder({ noPositions: true });
 
       const apiOrders = await getOrders();
 
@@ -102,22 +102,17 @@ describe("orders - database queries", () => {
 
   describe("deleteOrder", () => {
     it("deletes an order", async () => {
-      // create an order and header, which should not be deleted
-      await createOrderItemHeader();
-      // the order and article below should be deleted
-      const dbOrder = await createOrder();
+      const dbOrder = await createOrder({ noPositions: true });
       await createOrderItemArticle({
         orderId: dbOrder.order_id,
       });
-      expect(await orderExists(dbOrder.order_id)).toBe(true);
-      expect(await getOrderCount()).toBe(2);
-      expect(await getOrderItemsCount()).toBe(2);
+      expect(await getOrderCount()).toBe(1);
+      expect(await getOrderItemsCount()).toBe(1);
 
       await deleteOrder(dbOrder.order_id);
 
-      expect(await orderExists(dbOrder.order_id)).toBe(false);
-      expect(await getOrderCount()).toBe(1);
-      expect(await getOrderItemsCount()).toBe(1);
+      expect(await getOrderCount()).toBe(0);
+      expect(await getOrderItemsCount()).toBe(0);
     });
 
     it("throws the NotFoundError, if the order does not exist", async () => {
@@ -264,15 +259,15 @@ describe("orders - database queries", () => {
       const order = await createOrder();
 
       await createOrderItemHeader({ orderId: order.order_id });
-      expect(await getDbOrderHeaders(order.order_id)).toHaveLength(1);
+      expect(await getOrderItemsCount()).toBeGreaterThan(0);
 
       await editOrder(order.order_id, { items: [] });
 
-      expect(await getDbOrderHeaders(order.order_id)).toHaveLength(0);
+      expect(await getOrderItemsCount()).toBe(0);
     });
 
     it(`edits order.items`, async () => {
-      const order = await createOrder();
+      const order = await createOrder({ noPositions: true });
       await createOrderItemHeader({ orderId: order.order_id });
       expect(await getOrderItemsCount()).toBe(1);
 

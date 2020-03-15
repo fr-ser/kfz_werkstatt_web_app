@@ -1,11 +1,13 @@
 import server from "@backend/server";
 
-import { getCars } from "@backend/db/cars";
-
 import { getAuthHeader } from "@tests/helpers";
 import { db_cleanup } from "@tests/factory/factory";
 import { createCar } from "@tests/factory/car";
-import { createClient } from "../factory/client";
+import { createClient } from "@tests/factory/client";
+import { createOrder } from "@tests/factory/order";
+import { getCarCount } from "@tests/cars/helpers";
+import { getClientCount } from "@tests/clients/helpers";
+import { getOrderCount } from "@tests/orders/helpers";
 
 describe("cars - DELETE", () => {
   beforeAll(async () => {
@@ -19,7 +21,7 @@ describe("cars - DELETE", () => {
   it("deletes a car", async () => {
     const car = await createCar();
 
-    expect(await getCars()).toHaveLength(1);
+    expect(await getCarCount()).toBe(1);
     const response = await server.inject({
       method: "DELETE",
       headers: { ...getAuthHeader() },
@@ -27,7 +29,7 @@ describe("cars - DELETE", () => {
     });
 
     expect(response.statusCode).toEqual(200);
-    expect(await getCars()).toHaveLength(0);
+    expect(await getCarCount()).toBe(0);
   });
 
   it("returns 404 for missing cars", async () => {
@@ -44,7 +46,7 @@ describe("cars - DELETE", () => {
   it("returns 409 for a car with an owner", async () => {
     const car = await createCar([(await createClient()).client_id]);
 
-    expect(await getCars()).toHaveLength(1);
+    expect(await getCarCount()).toBe(1);
     const response = await server.inject({
       method: "DELETE",
       headers: { ...getAuthHeader() },
@@ -53,6 +55,24 @@ describe("cars - DELETE", () => {
 
     expect(response.statusCode).toEqual(409);
     expect(JSON.parse(response.payload).msg).toBeTruthy();
-    expect(await getCars()).toHaveLength(1);
+    expect(await getCarCount()).toBe(1);
+    expect(await getClientCount()).toBe(1);
+  });
+
+  it("returns 409 for a car with an order", async () => {
+    const car = await createCar();
+    await createOrder({ carId: car.car_id });
+
+    expect(await getCarCount()).toBe(1);
+    const response = await server.inject({
+      method: "DELETE",
+      headers: { ...getAuthHeader() },
+      url: `/api/cars/${car.car_id}`,
+    });
+
+    expect(response.statusCode).toEqual(409);
+    expect(JSON.parse(response.payload).msg).toBeTruthy();
+    expect(await getCarCount()).toBe(1);
+    expect(await getOrderCount()).toBe(1);
   });
 });

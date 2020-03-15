@@ -13,9 +13,14 @@ import { createCar } from "@tests/factory/car";
 import { createClient } from "@tests/factory/client";
 import { getRandomDate, getRandomEnumValue, getRandomArticleId } from "@tests/helpers";
 
-export async function createOrder(): Promise<DbOrder> {
-  const car = await createCar();
-  const client = await createClient();
+interface orderOptions {
+  clientId?: string;
+  carId?: string;
+  noPositions?: boolean;
+}
+export async function createOrder(opts?: orderOptions): Promise<DbOrder> {
+  const options = opts || {};
+  const orderId = `Auf${Date.now()}`;
 
   const result = await test_pool.query(
     `
@@ -26,9 +31,9 @@ export async function createOrder(): Promise<DbOrder> {
       RETURNING *
     `,
     [
-      `Auf${Date.now()}`,
-      car.car_id,
-      client.client_id,
+      orderId,
+      options.carId || (await createCar()).car_id,
+      options.clientId || (await createClient()).client_id,
       faker.random.words(),
       getRandomDate(),
       getRandomDate(),
@@ -38,6 +43,12 @@ export async function createOrder(): Promise<DbOrder> {
       faker.random.number(),
     ]
   );
+
+  if (!options.noPositions) {
+    await createOrderItemHeader({ position: 1, orderId });
+    await createOrderItemArticle({ position: 2, orderId });
+    await createOrderItemArticle({ position: 3, orderId });
+  }
 
   return result.rows[0];
 }

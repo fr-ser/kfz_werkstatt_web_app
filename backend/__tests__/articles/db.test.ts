@@ -100,9 +100,9 @@ describe("articles - database queries", () => {
       };
       await saveArticle(payload);
 
-      const dbOrder = await getDbArticle(articleId);
+      const dbArticle = await getDbArticle(articleId);
       for (const [key, value] of Object.entries(payload)) {
-        expect((dbOrder as any)[key]).toEqual(value);
+        expect((dbArticle as any)[key]).toEqual(value);
       }
     });
 

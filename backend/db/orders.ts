@@ -73,10 +73,10 @@ export async function deleteOrder(orderId: string) {
   } else {
     await _pool.query(
       `
-      WITH delete_articles as (
+      WITH delete_order_articles as (
         DELETE FROM order_item_article WHERE order_id = $1
       )
-      , delete_headers as (
+      , delete_order_headers as (
         DELETE FROM order_item_header WHERE order_id = $1
       )
       DELETE FROM order_ WHERE order_id = $1
