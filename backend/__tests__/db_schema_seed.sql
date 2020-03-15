@@ -66,13 +66,14 @@ CREATE TABLE order_ (
 );
 
 CREATE TABLE order_item_header (
-    id SERIAL PRIMARY KEY
+        id SERIAL PRIMARY KEY
     ,   order_id TEXT NOT NULL REFERENCES order_(order_id)
     ,   position INTEGER NOT NULL
     ,   header TEXT NOT NULL
 );
+
 CREATE TABLE order_item_article (
-    id SERIAL PRIMARY KEY
+        id SERIAL PRIMARY KEY
     ,   order_id TEXT NOT NULL REFERENCES order_(order_id)
     -- can come from article table but does not have to
     ,   article_id TEXT NOT NULL
@@ -83,16 +84,60 @@ CREATE TABLE order_item_article (
     ,   discount NUMERIC NOT NULL
 );
 
-
 CREATE TYPE document_type AS ENUM ('quote', 'invoice');
 
 CREATE TABLE document (
         document_id TEXT PRIMARY KEY
-    ,   art document_type NOT NULL
+    ,   type document_type NOT NULL
     ,   creation_date DATE NOT NULL
-    ,   title TEXT NOT NULL
-    ,   client_id TEXT NOT NULL REFERENCES client(client_id)
-    ,   car_id TEXT NOT NULL REFERENCES car(car_id)
     ,   order_id TEXT NOT NULL REFERENCES order_(order_id)
-    ,   document_content JSON NOT NULL
+);
+
+CREATE TABLE document_client (
+        id SERIAL PRIMARY KEY
+    ,   document_id TEXT NOT NULL REFERENCES document(document_id)
+    ,   client_id TEXT NOT NULL
+    ,   first_name TEXT NOT NULL
+    ,   last_name TEXT NOT NULL
+    ,   company_name TEXT
+    ,   zip_code INTEGER
+    ,   city TEXT
+    ,   street_and_number TEXT
+);
+
+CREATE TABLE document_car (
+        id SERIAL PRIMARY KEY
+    ,   document_id TEXT NOT NULL REFERENCES document(document_id)
+    ,   license_plate TEXT NOT NULL
+    ,   manufacturer TEXT NOT NULL
+    ,   model TEXT NOT NULL
+    ,   vin TEXT
+);
+
+CREATE TABLE document_order (
+        id SERIAL PRIMARY KEY
+    ,   document_id TEXT NOT NULL REFERENCES document(document_id)
+    ,   title TEXT NOT NULL
+    ,   date Date NOT NULL
+    ,   payment_due_date Date NOT NULL
+    ,   payment_method payment_method NOT NULL
+    ,   mileage NUMERIC
+);
+
+CREATE TABLE document_order_item_header (
+        id SERIAL PRIMARY KEY
+    ,   document_id TEXT NOT NULL REFERENCES document(document_id)
+    ,   position INTEGER NOT NULL
+    ,   header TEXT NOT NULL
+);
+
+CREATE TABLE document_order_item_article (
+        id SERIAL PRIMARY KEY
+    ,   document_id TEXT NOT NULL REFERENCES document(document_id)
+    ,   article_id TEXT NOT NULL
+    ,   position INTEGER NOT NULL
+    ,   description TEXT NOT NULL
+    ,   amount NUMERIC NOT NULL
+    ,   price_per_item NUMERIC NOT NULL
+    ,   discount NUMERIC NOT NULL
 );

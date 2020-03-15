@@ -5,6 +5,16 @@ export function getAuthHeader() {
   return { Authorization: `Basic ${encoded_credentials}` };
 }
 
+export function getDateStr(date: Date) {
+  const paddedMonth = (date.getUTCMonth() + 1).toString().padStart(2, "0");
+  const paddedDay = date
+    .getUTCDate()
+    .toString()
+    .padStart(2, "0");
+
+  return `${date.getUTCFullYear()}-${paddedMonth}-${paddedDay}`;
+}
+
 export function getRandomDate(): string {
   return faker.date
     .past()

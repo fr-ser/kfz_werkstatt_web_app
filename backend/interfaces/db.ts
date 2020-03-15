@@ -92,11 +92,55 @@ export enum DbDocumentType {
 
 export interface DbDocument {
   document_id: string;
-  art: DbDocumentType;
+  type: DbDocumentType;
   creation_date: string;
-  title: string;
-  client_id: string;
-  car_id: string;
   order_id: string;
-  document_content: Object;
+}
+export interface DbDocumentClient {
+  id: number;
+  document_id: string;
+  client_id: string;
+  first_name: string;
+  last_name: string;
+  company_name?: string;
+  zip_code?: number;
+  city?: string;
+  street_and_number?: string;
+}
+
+export interface DbDocumentCar {
+  id: number;
+  document_id: string;
+  license_plate: string;
+  manufacturer: string;
+  model: string;
+  vin?: string;
+}
+
+export interface DbDocumentOrder {
+  id: number;
+  document_id: string;
+  title: string;
+  date: string;
+  payment_due_date: string;
+  payment_method: DbPaymentMethod;
+  mileage?: number;
+}
+
+export interface DbDocumentOrderHeader {
+  id: number;
+  document_id: string;
+  position: number;
+  header: string;
+}
+
+export interface DbDocumentOrderArticle {
+  id: number;
+  document_id: string;
+  article_id: string;
+  position: number;
+  description: string;
+  amount: number;
+  price_per_item: number;
+  discount: number;
 }

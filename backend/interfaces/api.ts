@@ -1,4 +1,13 @@
-import { DbArticle, DbOrder, DbOrderItemArticle, DbOrderItemHeader } from "@backend/interfaces/db";
+import {
+  DbArticle,
+  DbOrder,
+  DbOrderItemArticle,
+  DbOrderItemHeader,
+  DbDocument,
+  DbDocumentOrder,
+  DbDocumentClient,
+  DbDocumentCar,
+} from "@backend/interfaces/db";
 
 interface ApiClient {
   client_id: string;
@@ -79,4 +88,16 @@ export interface SaveOrder extends DbOrder {
 }
 export interface EditOrder extends Partial<Omit<SaveOrder, "order_id">> {
   items?: (ApiOrderItemArticle | ApiOrderItemHeader)[];
+}
+
+export interface GetDocument extends DbDocument {
+  order: Omit<DbDocumentOrder, "id">;
+  client: Omit<DbDocumentClient, "id">;
+  car: Omit<DbDocumentCar, "id">;
+  items: (ApiOrderItemArticle | ApiOrderItemHeader)[];
+}
+
+export interface SaveDocument extends Omit<DbDocument, "creation_date"> {
+  client_id: string;
+  car_id: string;
 }

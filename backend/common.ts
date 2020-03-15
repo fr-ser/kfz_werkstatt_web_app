@@ -11,3 +11,4 @@ class _ExtendableError extends Error {
 }
 
 export class NotFoundError extends _ExtendableError {}
+export class BusinessConstraintError extends _ExtendableError {}
