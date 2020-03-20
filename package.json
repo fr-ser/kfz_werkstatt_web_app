@@ -15,7 +15,7 @@
   },
   "scripts": {
     "test": "npm run test:unit",
-    "test:unit": "jest --runInBand",
+    "test:unit": "jest --config backend/jest.config.js --runInBand",
     "test:tdd": "npm run test:unit -- --watch",
     "backend:dev": "nodemon -e ts -w backend --ignore '__tests__/' -x ts-node --project backend/tsconfig.json -r tsconfig-paths/register backend/index.ts"
   },
