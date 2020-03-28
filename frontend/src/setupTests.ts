@@ -3,10 +3,13 @@
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
 import "@testing-library/jest-dom/extend-expect";
+import fetchMock, { enableFetchMocks } from "jest-fetch-mock";
 
 import { mockMediaQuery } from "test/MediaQuery";
 
 mockMediaQuery();
+enableFetchMocks();
+fetchMock.mockReject(new Error("Mocked fetch fails by default"));
 
 const createRangeMock = () => ({
   setStart: () => {},

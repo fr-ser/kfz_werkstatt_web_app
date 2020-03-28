@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import { makeStyles, Theme } from "@material-ui/core/styles";
 
@@ -28,23 +28,6 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 export default function App() {
   const classes = useStyles();
-
-  // const [response, setResponse] = useState("initial");
-
-  // useEffect(() => {
-  //   const doTheThing = async () => {
-  //     try {
-  //       const resp = await fetch("./api/health");
-  //       const text = await resp.text();
-  //       setResponse(text);
-  //     } catch (error) {
-  //       setResponse(error);
-  //     }
-  //   };
-
-  //   doTheThing();
-  // }, []);
-
   return (
     <Router>
       <div className={classes.root}>
