@@ -1,12 +1,7 @@
 import * as faker from "faker";
 
-import {
-  DbOrder,
-  DbPaymentMethod,
-  DbOrderState,
-  DbOrderItemArticle,
-  DbOrderItemHeader,
-} from "@backend/interfaces/db";
+import { DbOrder, DbOrderItemArticle, DbOrderItemHeader } from "@backend/interfaces/db";
+import { OrderState, PaymentMethod } from "@backend/interfaces/api";
 
 import { test_pool } from "@tests/factory/factory";
 import { createCar } from "@tests/factory/car";
@@ -37,8 +32,8 @@ export async function createOrder(opts?: orderOptions): Promise<DbOrder> {
       faker.random.words(),
       getRandomDate(),
       getRandomDate(),
-      getRandomEnumValue(DbPaymentMethod),
-      getRandomEnumValue(DbOrderState),
+      getRandomEnumValue(PaymentMethod),
+      getRandomEnumValue(OrderState),
       faker.random.words(),
       faker.random.number(),
     ]

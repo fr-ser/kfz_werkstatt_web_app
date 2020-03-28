@@ -1,6 +1,5 @@
-import * as faker from "faker";
-
-import { DbDocument, DbDocumentType } from "@backend/interfaces/db";
+import { DbDocument } from "@backend/interfaces/db";
+import { DocumentType } from "@backend/interfaces/api";
 
 import { test_pool } from "@tests/factory/factory";
 import { getRandomEnumValue, getRandomDate } from "../helpers";
@@ -38,7 +37,7 @@ export async function createDocument(options: OrderOptions = {}): Promise<DbDocu
       VALUES ($1, $2, $3, $4)
       RETURNING *
     `,
-    [documentId, getRandomEnumValue(DbDocumentType), getRandomDate(), order.order_id]
+    [documentId, getRandomEnumValue(DocumentType), getRandomDate(), order.order_id]
   );
 
   await test_pool.query(

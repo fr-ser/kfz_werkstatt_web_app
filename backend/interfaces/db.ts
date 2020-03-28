@@ -1,3 +1,5 @@
+import { OrderState, PaymentMethod, DocumentType } from "@backend/interfaces/api";
+
 export interface DbClient {
   client_id: string;
   first_name: string;
@@ -43,16 +45,6 @@ export interface DbArticle {
   price?: number;
 }
 
-export enum DbPaymentMethod {
-  cash = "cash",
-  remittance = "remittance",
-}
-export enum DbOrderState {
-  in_progress = "in_progress",
-  done = "done",
-  cancelled = "cancelled",
-}
-
 export interface DbOrder {
   order_id: string;
   car_id: string;
@@ -60,8 +52,8 @@ export interface DbOrder {
   title: string;
   date: string;
   payment_due_date: string;
-  payment_method: DbPaymentMethod;
-  state: DbOrderState;
+  payment_method: PaymentMethod;
+  state: OrderState;
 
   description?: string;
   mileage?: number;
@@ -85,14 +77,9 @@ export interface DbOrderItemArticle {
   discount: number;
 }
 
-export enum DbDocumentType {
-  quote = "quote",
-  invoice = "invoice",
-}
-
 export interface DbDocument {
   document_id: string;
-  type: DbDocumentType;
+  type: DocumentType;
   creation_date: string;
   order_id: string;
 }
@@ -123,7 +110,7 @@ export interface DbDocumentOrder {
   title: string;
   date: string;
   payment_due_date: string;
-  payment_method: DbPaymentMethod;
+  payment_method: PaymentMethod;
   mileage?: number;
 }
 

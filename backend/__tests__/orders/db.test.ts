@@ -1,7 +1,11 @@
 import { NotFoundError } from "@backend/common";
 import { getOrder, getOrders, deleteOrder, saveOrder, editOrder } from "@backend/db/orders";
-import { DbPaymentMethod, DbOrderState } from "@backend/interfaces/db";
-import { ApiOrderItemArticle, ApiOrderItemHeader } from "@backend/interfaces/api";
+import {
+  ApiOrderItemArticle,
+  ApiOrderItemHeader,
+  OrderState,
+  PaymentMethod,
+} from "@backend/interfaces/api";
 
 import { createCar } from "@tests/factory/car";
 import { createClient } from "@tests/factory/client";
@@ -140,8 +144,8 @@ describe("orders - database queries", () => {
         title: "string",
         date: "2012-12-12",
         payment_due_date: "2012-12-12",
-        payment_method: DbPaymentMethod.cash,
-        state: DbOrderState.in_progress,
+        payment_method: PaymentMethod.cash,
+        state: OrderState.in_progress,
         description: "Some lengthy description",
         mileage: 222.333,
         items: [],
@@ -168,8 +172,8 @@ describe("orders - database queries", () => {
         title: "string",
         date: "2012-12-12",
         payment_due_date: "2012-12-12",
-        payment_method: DbPaymentMethod.cash,
-        state: DbOrderState.in_progress,
+        payment_method: PaymentMethod.cash,
+        state: OrderState.in_progress,
         description: "Some lengthy description",
         mileage: 222.333,
         items: [
@@ -221,8 +225,8 @@ describe("orders - database queries", () => {
       { changeProperty: "title", newValue: "sth" },
       { changeProperty: "date", newValue: "2020-12-12" },
       { changeProperty: "payment_due_date", newValue: "2020-12-12" },
-      { changeProperty: "payment_method", newValue: DbPaymentMethod.remittance },
-      { changeProperty: "state", newValue: DbOrderState.cancelled },
+      { changeProperty: "payment_method", newValue: PaymentMethod.remittance },
+      { changeProperty: "state", newValue: OrderState.cancelled },
     ];
     for (const { changeProperty, newValue } of changeProperties) {
       it(`changes the property: ${changeProperty}`, async () => {
@@ -299,14 +303,14 @@ describe("orders - database queries", () => {
 
       await editOrder(order.order_id, {
         title: "HH-12-12",
-        state: DbOrderState.cancelled,
+        state: OrderState.cancelled,
         client_id: newClient.client_id,
         car_id: newCar.car_id,
       });
 
       const dbOrder = await getDbOrder(order.order_id);
       expect(dbOrder.title).toEqual("HH-12-12");
-      expect(dbOrder.state).toEqual(DbOrderState.cancelled);
+      expect(dbOrder.state).toEqual(OrderState.cancelled);
       expect(dbOrder.client_id).toEqual(newClient.client_id);
       expect(dbOrder.car_id).toEqual(newCar.car_id);
     });

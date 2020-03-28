@@ -1,7 +1,6 @@
 import { NotFoundError, BusinessConstraintError } from "@backend/common";
 import { getDocument, getDocuments, deleteDocument, saveDocument } from "@backend/db/documents";
-import { DbDocumentType, DbDocumentOrder } from "@backend/interfaces/db";
-import { ApiOrderItemArticle, ApiOrderItemHeader } from "@backend/interfaces/api";
+import { ApiOrderItemArticle, ApiOrderItemHeader, DocumentType } from "@backend/interfaces/api";
 
 import { createDocument } from "@tests/factory/document";
 import { db_cleanup } from "@tests/factory/factory";
@@ -159,7 +158,7 @@ describe("documents - database queries", () => {
 
       const payload = {
         document_id: documentId,
-        type: DbDocumentType.invoice,
+        type: DocumentType.invoice,
         order_id: order.order_id,
         client_id: order.client_id,
         car_id: order.car_id,
@@ -168,7 +167,7 @@ describe("documents - database queries", () => {
 
       const dbDocument = await getDbDocument(documentId);
       expect(dbDocument.document_id).toBe(documentId);
-      expect(dbDocument.type).toBe(DbDocumentType.invoice);
+      expect(dbDocument.type).toBe(DocumentType.invoice);
       expect(dbDocument.creation_date).toBe(getDateStr(new Date()));
       expect(dbDocument.order_id).toBe(payload.order_id);
 
@@ -208,7 +207,7 @@ describe("documents - database queries", () => {
 
       const payload = {
         document_id: documentId,
-        type: DbDocumentType.invoice,
+        type: DocumentType.invoice,
         order_id: order.order_id,
         client_id: order.client_id,
         car_id: order.car_id,
@@ -229,7 +228,7 @@ describe("documents - database queries", () => {
       try {
         const payload = {
           document_id: "sth",
-          type: DbDocumentType.invoice,
+          type: DocumentType.invoice,
           order_id: order.order_id,
           client_id: order.client_id,
           car_id: order.car_id,

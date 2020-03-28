@@ -1,14 +1,3 @@
-import {
-  DbArticle,
-  DbOrder,
-  DbOrderItemArticle,
-  DbOrderItemHeader,
-  DbDocument,
-  DbDocumentOrder,
-  DbDocumentClient,
-  DbDocumentCar,
-} from "@backend/interfaces/db";
-
 interface ApiClient {
   client_id: string;
   first_name: string;
@@ -73,31 +62,101 @@ export interface SaveCar extends ApiCar {
 }
 export type EditCar = Partial<Omit<SaveCar, "car_id">>;
 
-export type GetArticle = DbArticle;
-export type SaveArticle = DbArticle;
+export interface GetArticle {
+  article_id: string;
+  description: string;
+  article_number?: string;
+  stock_amount?: number;
+  price?: number;
+}
+export type SaveArticle = GetArticle;
 export type EditArticle = Partial<Omit<SaveArticle, "article_id">>;
 
-export type ApiOrderItemArticle = Omit<DbOrderItemArticle, "id" | "order_id">;
-export type ApiOrderItemHeader = Omit<DbOrderItemHeader, "id" | "order_id">;
+export interface ApiOrderItemArticle {
+  article_id: string;
+  position: number;
+  description: string;
+  amount: number;
+  price_per_item: number;
+  discount: number;
+}
+export interface ApiOrderItemHeader {
+  position: number;
+  header: string;
+}
 
-export interface GetOrder extends DbOrder {
+export enum PaymentMethod {
+  cash = "cash",
+  remittance = "remittance",
+}
+
+export enum OrderState {
+  in_progress = "in_progress",
+  done = "done",
+  cancelled = "cancelled",
+}
+
+export interface GetOrder {
+  order_id: string;
+  car_id: string;
+  client_id: string;
+  title: string;
+  date: string;
+  payment_due_date: string;
+  payment_method: PaymentMethod;
+  state: OrderState;
+
+  description?: string;
+  mileage?: number;
   items: (ApiOrderItemArticle | ApiOrderItemHeader)[];
 }
-export interface SaveOrder extends DbOrder {
-  items: (ApiOrderItemArticle | ApiOrderItemHeader)[];
-}
+export type SaveOrder = GetOrder;
 export interface EditOrder extends Partial<Omit<SaveOrder, "order_id">> {
   items?: (ApiOrderItemArticle | ApiOrderItemHeader)[];
 }
 
-export interface GetDocument extends DbDocument {
-  order: Omit<DbDocumentOrder, "id">;
-  client: Omit<DbDocumentClient, "id">;
-  car: Omit<DbDocumentCar, "id">;
+export enum DocumentType {
+  quote = "quote",
+  invoice = "invoice",
+}
+
+export interface GetDocument {
+  document_id: string;
+  type: DocumentType;
+  creation_date: string;
+  order_id: string;
+  order: {
+    document_id: string;
+    title: string;
+    date: string;
+    payment_due_date: string;
+    payment_method: PaymentMethod;
+    mileage?: number;
+  };
+  client: {
+    document_id: string;
+    client_id: string;
+    first_name: string;
+    last_name: string;
+    company_name?: string;
+    zip_code?: number;
+    city?: string;
+    street_and_number?: string;
+  };
+  car: {
+    document_id: string;
+    license_plate: string;
+    manufacturer: string;
+    model: string;
+    vin?: string;
+  };
   items: (ApiOrderItemArticle | ApiOrderItemHeader)[];
 }
 
-export interface SaveDocument extends Omit<DbDocument, "creation_date"> {
+export interface SaveDocument {
+  document_id: string;
+  type: DocumentType;
+  order_id: string;
   client_id: string;
   car_id: string;
 }
