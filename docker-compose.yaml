@@ -10,3 +10,4 @@ services:
       POSTGRES_PASSWORD: password
     volumes:
       - ./backend/__tests__/db_schema_seed.sql:/docker-entrypoint-initdb.d/db_schema_seed.sql
+      - ./data_seeds/:/data_seeds/

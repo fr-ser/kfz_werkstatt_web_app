@@ -44,9 +44,9 @@ CREATE TABLE car_ownership (
 CREATE TABLE article (
         article_id TEXT PRIMARY KEY
     ,   description TEXT NOT NULL
-    ,   article_number TEXT
+    ,   article_number TEXT NOT NULL
+    ,   price NUMERIC NOT NULL
     ,   stock_amount NUMERIC
-    ,   price NUMERIC
 );
 
 CREATE TYPE payment_method AS ENUM ('cash', 'remittance');

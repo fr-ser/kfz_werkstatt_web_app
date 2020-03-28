@@ -97,6 +97,8 @@ describe("articles - database queries", () => {
       const payload = {
         article_id: articleId,
         description: "B-12-12",
+        article_number: "asdfa-asdfa/k",
+        price: 0.245,
       };
       await saveArticle(payload);
 

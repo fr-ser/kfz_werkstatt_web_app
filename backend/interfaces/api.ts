@@ -65,9 +65,9 @@ export type EditCar = Partial<Omit<SaveCar, "car_id">>;
 export interface GetArticle {
   article_id: string;
   description: string;
-  article_number?: string;
+  article_number: string;
   stock_amount?: number;
-  price?: number;
+  price: number;
 }
 export type SaveArticle = GetArticle;
 export type EditArticle = Partial<Omit<SaveArticle, "article_id">>;
