@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 
 import { routeNames } from "common/Navigation";
 import AppHeader from "common/AppHeader";
+import { AppHeaderSmallScreen } from "common/MediaQueries";
 
 import { setMatcher, clearMatchers } from "test/MediaQuery";
 
@@ -13,7 +14,7 @@ describe("AppHeader", () => {
   });
 
   it("shows the page tabs and the title", () => {
-    setMatcher("(max-width:900px)", false);
+    setMatcher(AppHeaderSmallScreen, false);
 
     const { getAllByRole, getByText } = render(
       <MemoryRouter initialEntries={["/"]}>
@@ -31,7 +32,7 @@ describe("AppHeader", () => {
   });
 
   it("hides the title and shows only the current page for small devices", () => {
-    setMatcher("(max-width:900px)", true);
+    setMatcher(AppHeaderSmallScreen, true);
 
     const { getAllByRole, getByText, queryByText } = render(
       <MemoryRouter initialEntries={["/"]}>
