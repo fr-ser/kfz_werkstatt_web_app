@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, waitForElement, screen } from "@testing-library/react";
+import { fireEvent, render, waitForElement } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import App from "App";
