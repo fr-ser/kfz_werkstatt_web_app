@@ -4,23 +4,20 @@ import { GetArticle } from "common/api";
 
 export const articleList: GetArticle[] = [
   {
-    article_id: `Art1`,
+    article_number: `Art1`,
     description: faker.commerce.product(),
-    article_number: faker.commerce.product(),
     stock_amount: faker.random.number(),
     price: faker.random.number(),
   },
   {
-    article_id: `Art2`,
+    article_number: `Art2`,
     description: faker.commerce.product(),
-    article_number: faker.commerce.product(),
     stock_amount: faker.random.number(),
     price: faker.random.number(),
   },
   {
-    article_id: `Art3`,
+    article_number: `Art3`,
     description: faker.commerce.product(),
-    article_number: faker.commerce.product(),
     stock_amount: faker.random.number(),
     price: faker.random.number(),
   },

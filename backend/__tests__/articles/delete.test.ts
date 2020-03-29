@@ -22,7 +22,7 @@ describe("articles - DELETE", () => {
     const response = await server.inject({
       method: "DELETE",
       headers: { ...getAuthHeader() },
-      url: `/api/articles/${article.article_id}`,
+      url: `/api/articles/${article.article_number}`,
     });
 
     expect(response.statusCode).toEqual(200);

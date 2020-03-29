@@ -42,9 +42,8 @@ CREATE TABLE car_ownership (
 );
 
 CREATE TABLE article (
-        article_id TEXT PRIMARY KEY
+        article_number TEXT PRIMARY KEY
     ,   description TEXT NOT NULL
-    ,   article_number TEXT NOT NULL
     ,   price NUMERIC NOT NULL
     ,   stock_amount NUMERIC
 );

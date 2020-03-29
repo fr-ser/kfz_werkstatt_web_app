@@ -26,8 +26,22 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-function ArticleListItem({ article }: { article: GetArticle }) {
+interface ArticleItemProps {
+  article: GetArticle;
+  onUpdate: () => Promise<void>;
+}
+
+function ArticleListItem({ article, onUpdate }: ArticleItemProps) {
   const classes = useStyles();
+
+  async function deleteArticle() {
+    try {
+      await fetch(`/api/articles/${article.article_number}`, { method: "DELETE" });
+      await onUpdate();
+    } catch (error) {
+      // TODO: notify of error
+    }
+  }
 
   return (
     <Paper className={classes.paper}>
@@ -56,7 +70,7 @@ function ArticleListItem({ article }: { article: GetArticle }) {
           <IconButton color="inherit">
             <Save />
           </IconButton>
-          <IconButton color="inherit">
+          <IconButton color="inherit" role="delete-article" onClick={deleteArticle}>
             <DeleteForever />
           </IconButton>
         </Grid>
@@ -95,7 +109,11 @@ export default function ArticlePage() {
       {articles
         .filter(article => anyTextSearch(article, filterText))
         .map(article => (
-          <ArticleListItem key={article.article_id} article={article} />
+          <ArticleListItem
+            key={article.article_number}
+            article={article}
+            onUpdate={loadArticles}
+          />
         ))}
     </div>
   );

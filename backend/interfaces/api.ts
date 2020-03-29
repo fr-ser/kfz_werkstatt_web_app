@@ -63,14 +63,13 @@ export interface SaveCar extends ApiCar {
 export type EditCar = Partial<Omit<SaveCar, "car_id">>;
 
 export interface GetArticle {
-  article_id: string;
-  description: string;
   article_number: string;
-  stock_amount?: number;
+  description: string;
   price: number;
+  stock_amount?: number;
 }
 export type SaveArticle = GetArticle;
-export type EditArticle = Partial<Omit<SaveArticle, "article_id">>;
+export type EditArticle = Partial<Omit<SaveArticle, "article_number">>;
 
 export interface ApiOrderItemArticle {
   article_id: string;

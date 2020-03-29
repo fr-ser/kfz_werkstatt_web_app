@@ -16,9 +16,8 @@ describe("articles - POST", () => {
 
   it("creates an article for a valid payload", async () => {
     const payload = {
-      article_id: "Art123",
+      article_number: "Art123",
       description: "license_plate",
-      article_number: "BZ54",
       price: 12.34,
       stock_amount: 12.34,
     };
@@ -32,7 +31,7 @@ describe("articles - POST", () => {
     expect(response.statusCode).toEqual(201);
     expect(await getArticleCount()).toBe(1);
 
-    const dbArticle = await getDbArticle(payload.article_id);
+    const dbArticle = await getDbArticle(payload.article_number);
     for (const key of Object.keys(payload)) {
       expect((dbArticle as any)[key]).toEqual((payload as any)[key]);
     }
@@ -40,8 +39,9 @@ describe("articles - POST", () => {
 
   it("creates an article for a minimal payload", async () => {
     const payload = {
-      article_id: "Art123",
+      article_number: "Art123",
       description: "license_plate",
+      price: 22,
     };
     const response = await server.inject({
       method: "POST",
@@ -53,7 +53,7 @@ describe("articles - POST", () => {
     expect(response.statusCode).toEqual(201);
     expect(await getArticleCount()).toBe(1);
 
-    const dbArticle = await getDbArticle(payload.article_id);
+    const dbArticle = await getDbArticle(payload.article_number);
     for (const key of Object.keys(payload)) {
       expect((dbArticle as any)[key]).toEqual((payload as any)[key]);
     }
@@ -62,8 +62,9 @@ describe("articles - POST", () => {
   it("returns 422 for database errors (duplicate key)", async () => {
     const existingArticle = await createArticle();
     const payload = {
-      article_id: existingArticle.article_id,
+      article_number: existingArticle.article_number,
       description: "license_plate",
+      price: 22,
     };
     const response = await server.inject({
       method: "POST",
@@ -78,7 +79,7 @@ describe("articles - POST", () => {
 
   describe("invalid payload", () => {
     const validPayload = {
-      article_id: "Art123",
+      article_number: "Art123",
       license_plate: "a",
       manufacturer: "a",
       model: "a",
@@ -87,7 +88,7 @@ describe("articles - POST", () => {
       {},
       { some: "weird stuff" },
       { ...validPayload, some: "valid and invalid stuff" },
-      { ...validPayload, article_id: "Artinvalid_id" },
+      { ...validPayload, article_number: "Artinvalid_id" },
       { ...validPayload, stock_amount: -1 },
       { ...validPayload, price: "yesterday" },
     ];

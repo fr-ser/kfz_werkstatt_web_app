@@ -32,13 +32,32 @@ describe("ArticlePage", () => {
     act(() => {
       const input = getByRole("text-filter-input");
       fireEvent.change(input, {
-        target: { value: `${articleList[0].article_number} ${articleList[0].article_id}` },
+        target: { value: `${articleList[0].article_number} ${articleList[0].description}` },
       });
       jest.advanceTimersByTime(500);
     });
 
     const articles = getAllByRole("article-item");
     expect(articles).toHaveLength(1);
+  });
+
+  it("deletes an article on click", async () => {
+    const article = articleList[0];
+    fetchMock.mockIf(/api\/articles/, JSON.stringify([article]));
+
+    const { getByRole, findByRole } = render(<ArticlePage />);
+
+    await findByRole("article-item");
+    fetchMock.resetMocks();
+
+    await act(async () => {
+      fireEvent.click(getByRole("delete-article"));
+    });
+
+    expect(fetchMock.mock.calls).toHaveLength(2);
+    const deleteCall = fetchMock.mock.calls[0] as any;
+    expect(deleteCall[1].method).toBe("DELETE");
+    expect(deleteCall[0]).toBe(`/api/articles/${article.article_number}`);
   });
 
   it("render nothing in case of an error", async () => {

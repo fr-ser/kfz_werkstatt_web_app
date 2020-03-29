@@ -64,7 +64,7 @@ describe("articles - GET", () => {
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
-        url: `/api/articles/${dbArticle.article_id}`,
+        url: `/api/articles/${dbArticle.article_number}`,
       });
 
       expect(response.statusCode).toEqual(200);

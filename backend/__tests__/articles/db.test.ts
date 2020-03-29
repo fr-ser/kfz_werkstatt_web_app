@@ -20,7 +20,7 @@ describe("articles - database queries", () => {
     it("returns the article", async () => {
       const dbArticle = await createArticle();
 
-      const apiArticle = await getArticle(dbArticle.article_id);
+      const apiArticle = await getArticle(dbArticle.article_number);
 
       for (const key of Object.keys(dbArticle)) {
         expect((apiArticle as any)[key]).toEqual((dbArticle as any)[key]);
@@ -51,8 +51,8 @@ describe("articles - database queries", () => {
 
       expect(apiArticles).toHaveLength(2);
 
-      const apiArticle1 = apiArticles.find(x => x.article_id === dbArticle1.article_id);
-      const apiArticle2 = apiArticles.find(x => x.article_id === dbArticle2.article_id);
+      const apiArticle1 = apiArticles.find(x => x.article_number === dbArticle1.article_number);
+      const apiArticle2 = apiArticles.find(x => x.article_number === dbArticle2.article_number);
 
       for (const key of Object.keys(dbArticle1)) {
         expect((apiArticle1 as any)[key]).toEqual((dbArticle1 as any)[key]);
@@ -66,16 +66,13 @@ describe("articles - database queries", () => {
 
   describe("deleteArticle", () => {
     it("deletes an article", async () => {
-      await createArticle(); // one article, which should not be deleted
       const dbArticle = await createArticle();
 
-      expect(await articleExists(dbArticle.article_id)).toBe(true);
-      expect(await getArticleCount()).toBe(2);
+      expect(await articleExists(dbArticle.article_number)).toBe(true);
 
-      await deleteArticle(dbArticle.article_id);
+      await deleteArticle(dbArticle.article_number);
 
-      expect(await articleExists(dbArticle.article_id)).toBe(false);
-      expect(await getArticleCount()).toBe(1);
+      expect(await articleExists(dbArticle.article_number)).toBe(false);
     });
 
     it("throws the NotFoundError, if the article does not exist", async () => {
@@ -91,18 +88,17 @@ describe("articles - database queries", () => {
 
   describe("saveArticle", () => {
     it("saves an article", async () => {
-      const articleId = "sth";
-      expect(await articleExists(articleId)).toBe(false);
+      const articleNumber = "sth";
+      expect(await articleExists(articleNumber)).toBe(false);
 
       const payload = {
-        article_id: articleId,
-        description: "B-12-12",
-        article_number: "asdfa-asdfa/k",
+        article_number: articleNumber,
         price: 0.245,
+        description: "B-12-12",
       };
       await saveArticle(payload);
 
-      const dbArticle = await getDbArticle(articleId);
+      const dbArticle = await getDbArticle(articleNumber);
       for (const [key, value] of Object.entries(payload)) {
         expect((dbArticle as any)[key]).toEqual(value);
       }
@@ -119,14 +115,14 @@ describe("articles - database queries", () => {
   });
 
   describe("editArticle", () => {
-    const changeableStringProperties = ["description", "article_number"];
+    const changeableStringProperties = ["description"];
     for (const changeProperty of changeableStringProperties) {
       it(`changes the property: ${changeProperty}`, async () => {
         const article = await createArticle();
 
-        await editArticle(article.article_id, { [changeProperty]: "newValue" });
+        await editArticle(article.article_number, { [changeProperty]: "newValue" });
 
-        const dbArticle = await getDbArticle(article.article_id);
+        const dbArticle = await getDbArticle(article.article_number);
         expect((dbArticle as any)[changeProperty]).toEqual("newValue");
       });
     }
@@ -136,9 +132,9 @@ describe("articles - database queries", () => {
       it(`changes the property: ${changeProperty}`, async () => {
         const article = await createArticle();
 
-        await editArticle(article.article_id, { [changeProperty]: 12345 });
+        await editArticle(article.article_number, { [changeProperty]: 12345 });
 
-        const dbArticle = await getDbArticle(article.article_id);
+        const dbArticle = await getDbArticle(article.article_number);
         expect((dbArticle as any)[changeProperty]).toEqual(12345);
       });
     }
@@ -146,13 +142,13 @@ describe("articles - database queries", () => {
     it("changes multiple properties at once", async () => {
       const article = await createArticle();
 
-      await editArticle(article.article_id, {
+      await editArticle(article.article_number, {
         description: "HH-12-12",
         stock_amount: 12345,
         price: 12.345,
       });
 
-      const dbArticle = await getDbArticle(article.article_id);
+      const dbArticle = await getDbArticle(article.article_number);
       expect(dbArticle.description).toEqual("HH-12-12");
       expect(dbArticle.stock_amount).toEqual(12345);
       expect(dbArticle.price).toEqual(12.345);

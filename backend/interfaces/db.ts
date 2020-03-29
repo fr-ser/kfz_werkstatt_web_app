@@ -38,11 +38,10 @@ export interface DbCar {
 }
 
 export interface DbArticle {
-  article_id: string;
-  description: string;
   article_number: string;
-  stock_amount?: number;
+  description: string;
   price: number;
+  stock_amount?: number;
 }
 
 export interface DbOrder {

@@ -6,15 +6,17 @@ export async function getArticleCount(): Promise<number> {
   return result.rows[0].count_;
 }
 
-export async function articleExists(articleId: string): Promise<boolean> {
+export async function articleExists(articleNumber: string): Promise<boolean> {
   const result = await test_pool.query(
-    `SELECT EXISTS(SELECT 1 FROM article WHERE article_id = $1) as exists_`,
-    [articleId]
+    `SELECT EXISTS(SELECT 1 FROM article WHERE article_number = $1) as exists_`,
+    [articleNumber]
   );
   return result.rows[0].exists_;
 }
 
-export async function getDbArticle(articleId: string): Promise<DbArticle> {
-  const result = await test_pool.query(`SELECT * FROM article WHERE article_id = $1`, [articleId]);
+export async function getDbArticle(articleNumber: string): Promise<DbArticle> {
+  const result = await test_pool.query(`SELECT * FROM article WHERE article_number = $1`, [
+    articleNumber,
+  ]);
   return result.rows[0];
 }
