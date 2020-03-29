@@ -1,3 +1,51 @@
+import * as Sentry from "@sentry/browser";
+
+export async function raiseForStatus(response: Response) {
+  if (!response.ok) {
+    let responseText: string;
+
+    try {
+      responseText = await response.text();
+    } catch (_) {
+      responseText = "No text available";
+    }
+
+    throw Error(`${response.statusText} - ${responseText}`);
+  }
+}
+
+interface FetchArgs {
+  url: string;
+  method?: string;
+  json?: boolean;
+}
+
+const fetchDefaults = {
+  method: "GET",
+  json: false,
+};
+
+export async function appFetch(options: FetchArgs) {
+  const { url, method, json } = { ...fetchDefaults, ...options };
+
+  try {
+    const resp = await fetch(url, { method });
+    await raiseForStatus(resp);
+
+    let result: any;
+    if (json) {
+      result = await resp.json();
+    } else {
+      result = resp;
+    }
+
+    return result;
+  } catch (error) {
+    Sentry.captureException(error);
+    throw error;
+  }
+}
+
 export function debounce<F extends Function>(func: F, wait: number): F {
   let timeoutID: number;
 

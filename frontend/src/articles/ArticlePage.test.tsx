@@ -1,9 +1,10 @@
 import React from "react";
-import { fireEvent, render, act } from "@testing-library/react";
+import { fireEvent, act } from "@testing-library/react";
 import fetchMock from "jest-fetch-mock";
 
 import ArticlePage from "articles/ArticlePage";
 
+import { render } from "test/render";
 import { articleList } from "test/mocks/articles";
 import { resetFetchMock } from "test/fetch";
 
