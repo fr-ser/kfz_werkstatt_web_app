@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { makeStyles, Theme, useTheme } from "@material-ui/core/styles";
 import {
@@ -99,6 +99,11 @@ function PhoneNav({ currentPage, pages }: NavProps) {
 
 function MonitorNav({ currentPage, pages }: NavProps) {
   const classes = useTabStyles();
+
+  useEffect(() => {
+    // needed to initially redraw the TabIndicator for a page refresh
+    window.dispatchEvent(new CustomEvent("resize"));
+  }, []);
 
   return (
     <Tabs value={currentPage}>
