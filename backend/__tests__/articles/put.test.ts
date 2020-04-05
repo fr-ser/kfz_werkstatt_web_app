@@ -1,6 +1,6 @@
 import server from "@backend/server";
 
-import { getDbArticle } from "@tests/articles/helpers";
+import { getDbArticle, articleExists } from "@tests/articles/helpers";
 import { getAuthHeader } from "@tests/helpers";
 import { db_cleanup } from "@tests/factory/factory";
 import { createArticle } from "@tests/factory/article";
@@ -16,12 +16,14 @@ describe("articles - PUT", () => {
 
   it("edits an article", async () => {
     const article = await createArticle();
+    const newNumber = "asdf";
 
     const response = await server.inject({
       method: "PUT",
       headers: { ...getAuthHeader() },
       url: `/api/articles/${article.article_number}`,
       payload: {
+        article_number: newNumber,
         description: "Esteban",
         stock_amount: 12345,
         price: 123.45,
@@ -29,7 +31,8 @@ describe("articles - PUT", () => {
     });
 
     expect(response.statusCode).toEqual(200);
-    const dbArticle = await getDbArticle(article.article_number);
+    expect(await articleExists(article.article_number)).toBeFalsy();
+    const dbArticle = await getDbArticle(newNumber);
     expect(dbArticle.description).toEqual("Esteban");
     expect(dbArticle.stock_amount).toEqual(12345);
     expect(dbArticle.price).toEqual(123.45);
@@ -38,7 +41,6 @@ describe("articles - PUT", () => {
   const invalidPayloads = [
     {},
     { some: "weird_stuff" },
-    { article_number: "Art1" },
     { description: "Julio", some: "valid and invalid" },
   ];
   for (const payload of invalidPayloads) {

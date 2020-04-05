@@ -1,6 +1,6 @@
 import * as faker from "faker";
 
-import { GetArticle } from "common/api";
+import { GetArticle } from "common/APIInterfaces";
 
 export const articleList: GetArticle[] = [
   {

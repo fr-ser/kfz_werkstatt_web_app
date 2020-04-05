@@ -1,15 +1,44 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { fireEvent, render, waitForElement } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import App from "App";
 import { SidebarBigScreen } from "common/MediaQueries";
+import Sidebar, { useSidebar, SidebarProvider } from "common/Sidebar";
 
 import { setMatcher, clearMatchers } from "test/MediaQuery";
 
 describe("Sidebar", () => {
   afterAll(() => {
     clearMatchers();
+  });
+
+  it("loads action buttons", async () => {
+    const mockFn = jest.fn();
+    setMatcher(SidebarBigScreen, true);
+
+    function DummyComponent() {
+      const { setMainActions } = useSidebar();
+
+      useEffect(() => {
+        setMainActions([<button onClick={mockFn} key="1" role="some-button"></button>]);
+      }, []);
+
+      return <div>Test</div>;
+    }
+
+    const { findByRole } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <SidebarProvider>
+          <Sidebar />
+          <DummyComponent />
+        </SidebarProvider>
+      </MemoryRouter>
+    );
+
+    fireEvent.click(await findByRole("some-button"));
+
+    expect(mockFn).toHaveBeenCalled();
   });
 
   it("has a permanent (visible) sidebar for big screens", () => {

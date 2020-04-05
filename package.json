@@ -17,9 +17,9 @@
     "test": "npm run test:unit",
     "test:unit": "jest --config backend/jest.config.js --runInBand",
     "test:tdd": "npm run test:unit -- --watch",
-    "backend:dev": "nodemon -e ts -w backend --ignore '__tests__/' -x ts-node --project backend/tsconfig.json -r tsconfig-paths/register backend/index.ts",
-    "backend": "ts-node --project backend/tsconfig.json -r tsconfig-paths/register backend/index.ts",
-    "seed:dev": "docker-compose up -d && sleep 1 && docker-compose exec db psql -U kfz -f /data_seeds/development.sql"
+    "serve:dev": "nodemon -e ts -w backend --ignore '__tests__/' -x ts-node --project backend/tsconfig.json -r tsconfig-paths/register backend/index.ts",
+    "serve": "ts-node --project backend/tsconfig.json -r tsconfig-paths/register backend/index.ts",
+    "seed": "docker-compose up -d && sleep 1 && docker-compose exec db psql -U kfz -f /data_seeds/development.sql"
   },
   "dependencies": {
     "fastify": "^2.12.0",

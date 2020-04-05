@@ -7,6 +7,7 @@ interface SidebarState {
   drawerWidth: number;
   variant: "temporary" | "permanent";
   isOpen: boolean;
+  mainActions: JSX.Element[];
 }
 
 type ContextInterface = [SidebarState, (state: SidebarState) => void];
@@ -16,6 +17,7 @@ export const sidebarContext = createContext<ContextInterface>([
     drawerWidth: 250,
     variant: "temporary",
     isOpen: false,
+    mainActions: [],
   },
   _ => {},
 ]);
@@ -34,10 +36,16 @@ export function useSidebar() {
     }
   }
 
+  function setMainActions(mainActions: JSX.Element[]) {
+    setState({ ...state, mainActions });
+  }
+
   return {
     drawerWidth: state.drawerWidth,
     variant: state.variant,
     isOpen: state.isOpen,
+    mainActions: state.mainActions,
+    setMainActions,
     toggleSidebar,
   };
 }
@@ -48,6 +56,7 @@ export function SidebarProvider(props: React.Props<{}>) {
     drawerWidth: 250,
     variant: bigScreeen ? "permanent" : "temporary",
     isOpen: bigScreeen,
+    mainActions: [],
   };
   const [state, setState] = useState(initialState);
 

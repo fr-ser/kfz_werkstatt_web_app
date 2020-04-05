@@ -1,4 +1,4 @@
-import { debounce, anyTextSearch } from "common/utils";
+import { debounce, anyTextSearch, strToFloat } from "common/utils";
 
 describe("utils", () => {
   test("debounce", () => {
@@ -18,6 +18,51 @@ describe("utils", () => {
     expect(mockFn.mock.calls[0][0]).toBe("var1");
     expect(mockFn.mock.calls[0][1]).toBe("var2");
     expect(mockFn.mock.calls[1][0]).toBe("var3");
+  });
+
+  describe.only("strToFloat", () => {
+    it("converts string", () => {
+      let testCases = [
+        { strNum: "-4", result: -4 },
+        { strNum: "22", result: 22 },
+        { strNum: "25,6", result: 25.6 },
+        { strNum: "1,2345", result: 1.2345 },
+        { strNum: "1.234,5", result: 1234.5 },
+        { strNum: "0", result: 0 },
+      ];
+
+      for (const { strNum, result } of testCases) {
+        expect(strToFloat(strNum)).toBe(result);
+      }
+    });
+
+    it("applies precision", () => {
+      let testCases = [
+        { strNum: "1,2345", precision: 4, result: 1.2345 },
+        { strNum: "1,2345", precision: 6, result: 1.2345 },
+        { strNum: "1,2345", precision: 3, result: 1.235 },
+        { strNum: "1,2345", precision: 1, result: 1.2 },
+        { strNum: "1,2345", precision: 0, result: 1 },
+        { strNum: "12,345", precision: -1, result: 10 },
+      ];
+
+      for (const { strNum, result, precision } of testCases) {
+        expect(strToFloat(strNum, precision)).toBe(result);
+      }
+    });
+
+    it("throws errors for incorrect arguments", () => {
+      let testCases = [
+        { strNum: "NotANumber", precision: null },
+        { strNum: "1,23,45", precision: null },
+        { strNum: "123,45", precision: 1.4 },
+        { strNum: "zero", precision: 1 },
+      ];
+
+      for (const { strNum, precision } of testCases) {
+        expect(() => strToFloat(strNum, precision as any)).toThrow();
+      }
+    });
   });
 
   describe("anyTextSearch", () => {

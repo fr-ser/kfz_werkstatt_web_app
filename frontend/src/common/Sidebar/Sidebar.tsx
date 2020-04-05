@@ -45,7 +45,7 @@ const useStyles = makeStyles({
 
 export function Sidebar() {
   const theme = useTheme();
-  const { drawerWidth, variant, isOpen, toggleSidebar } = useSidebar();
+  const { drawerWidth, variant, isOpen, toggleSidebar, mainActions } = useSidebar();
   const classes = useStyles({ theme, drawerWidth });
 
   function closeSidebar() {
@@ -72,9 +72,7 @@ export function Sidebar() {
         <span>Menü</span>
       </div>
       <Divider />
-      <div className={`${classes.actions} ${classes.mainActions}`}>
-        <Button variant="contained">Speichern</Button>
-      </div>
+      <div className={`${classes.actions} ${classes.mainActions}`}>{mainActions}</div>
       <Divider />
       <div className={`${classes.actions} ${classes.bottomActions}`}>
         <Button variant="contained">Einstellung</Button>

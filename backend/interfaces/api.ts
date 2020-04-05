@@ -69,7 +69,8 @@ export interface GetArticle {
   stock_amount?: number;
 }
 export type SaveArticle = GetArticle;
-export type EditArticle = Partial<Omit<SaveArticle, "article_number">>;
+// TODO can you edit the articleNumber?
+export type EditArticle = Partial<SaveArticle>;
 
 export interface ApiOrderItemArticle {
   article_id: string;
