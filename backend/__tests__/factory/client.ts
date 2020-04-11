@@ -7,7 +7,7 @@ import { getRandomDate } from "@tests/helpers";
 
 export async function createClient(carIds?: string[]): Promise<DbClient> {
   const client = {
-    client_id: `K${Date.now()}`,
+    client_id: `K${Date.now()}${faker.random.number(100)}`,
     first_name: faker.name.firstName(),
     last_name: faker.name.lastName(),
     email: faker.internet.email(),

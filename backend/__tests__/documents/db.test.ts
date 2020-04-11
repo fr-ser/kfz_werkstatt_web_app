@@ -1,15 +1,15 @@
 import { NotFoundError, BusinessConstraintError } from "@backend/common";
 import { getDocument, getDocuments, deleteDocument, saveDocument } from "@backend/db/documents";
-import { ApiOrderItemArticle, ApiOrderItemHeader, DocumentType } from "@backend/interfaces/api";
+import {
+  ApiOrderItemArticle,
+  ApiOrderItemHeader,
+  DocumentType,
+  GetDocument,
+} from "@backend/interfaces/api";
 
 import { createDocument } from "@tests/factory/document";
-import { db_cleanup } from "@tests/factory/factory";
 import {
-  getDocumentCount,
   getDbDocument,
-  getDocumentCarCount,
-  getDocumentClientCount,
-  getDocumentOrderCount,
   getDocumentOrderArticleCount,
   getDocumentOrderHeaderCount,
   getDbDocumentCar,
@@ -21,6 +21,10 @@ import {
   compareDocumentCar,
   compareDocumentClient,
   compareDocumentOrder,
+  documentExists,
+  documentCarExists,
+  documentClientExists,
+  documentOrderExists,
 } from "@tests/documents/helpers";
 import { createOrder, createOrderItemHeader, createOrderItemArticle } from "@tests/factory/order";
 import { createCar } from "@tests/factory/car";
@@ -28,10 +32,6 @@ import { createClient } from "@tests/factory/client";
 import { getDateStr } from "@tests/helpers";
 
 describe("documents - database queries", () => {
-  beforeEach(async () => {
-    await db_cleanup();
-  });
-
   describe("getDocument", () => {
     it("returns the document", async () => {
       const order = await createOrder({ noPositions: true });
@@ -76,24 +76,15 @@ describe("documents - database queries", () => {
   });
 
   describe("getDocuments", () => {
-    it("returns an empty list for no documents", async () => {
-      expect(await getDocuments()).toEqual([]);
-    });
-
     it("returns all documents", async () => {
-      const dbDocuments = [await createDocument(), await createDocument()].sort((a, b) =>
-        a.document_id > b.document_id ? -1 : 1
-      );
+      const dbDocuments = [await createDocument(), await createDocument()];
 
-      const apiDocuments = (await getDocuments()).sort((a, b) =>
-        a.document_id > b.document_id ? -1 : 1
-      );
+      const apiDocuments = await getDocuments();
 
-      expect(apiDocuments).toHaveLength(dbDocuments.length);
-
-      for (let idx = 0; idx < apiDocuments.length; idx++) {
-        const apiDocument = apiDocuments[idx];
-        const dbDocument = dbDocuments[idx];
+      for (const dbDocument of dbDocuments) {
+        const apiDocument = apiDocuments.find(
+          (apiDocument) => apiDocument.document_id === dbDocument.document_id
+        ) as GetDocument;
 
         expect(apiDocument.document_id).toBe(dbDocument.document_id);
         expect(apiDocument.creation_date).toBe(dbDocument.creation_date);
@@ -117,16 +108,9 @@ describe("documents - database queries", () => {
     it("deletes a document", async () => {
       const dbDocument = await createDocument();
 
-      expect(await getDocumentCount()).toBe(1);
-
       await deleteDocument(dbDocument.document_id);
 
-      expect(await getDocumentCount()).toBe(0);
-      expect(await getDocumentCarCount()).toBe(0);
-      expect(await getDocumentClientCount()).toBe(0);
-      expect(await getDocumentOrderCount()).toBe(0);
-      expect(await getDocumentOrderArticleCount()).toBe(0);
-      expect(await getDocumentOrderHeaderCount()).toBe(0);
+      expect(await documentExists(dbDocument.document_id)).toBe(false);
     });
 
     it("throws the NotFoundError, if the document does not exist", async () => {
@@ -142,7 +126,7 @@ describe("documents - database queries", () => {
 
   describe("saveDocument", () => {
     it("saves a document with order items", async () => {
-      const documentId = "sth";
+      const documentId = "sth1";
       const car = await createCar();
       const client = await createClient();
       const order = await createOrder({
@@ -183,13 +167,13 @@ describe("documents - database queries", () => {
       expect(dbDocumentClient.document_id).toBe(documentId);
       compareDocumentClient(dbDocumentClient, client);
 
-      expect(await getDocumentOrderHeaderCount()).toBe(1);
+      expect(await getDocumentOrderHeaderCount(documentId)).toBe(1);
       const dbDocumentHeader = (await getDbDocumentHeaders(documentId))[0];
       expect(dbDocumentHeader.document_id).toBe(documentId);
       expect(dbDocumentHeader.position).toBe(header.position);
       expect(dbDocumentHeader.header).toBe(header.header);
 
-      expect(await getDocumentOrderArticleCount()).toBe(2);
+      expect(await getDocumentOrderArticleCount(documentId)).toBe(2);
       const dbArticles = await getDbDocumentArticles(documentId);
       for (let idx = 0; idx < articles.length; idx++) {
         const dbArticle = dbArticles[idx];
@@ -214,12 +198,12 @@ describe("documents - database queries", () => {
       };
       await saveDocument(payload);
 
-      expect(await getDocumentCount()).toBe(1);
-      expect(await getDocumentCarCount()).toBe(1);
-      expect(await getDocumentClientCount()).toBe(1);
-      expect(await getDocumentOrderCount()).toBe(1);
-      expect(await getDocumentOrderHeaderCount()).toBe(0);
-      expect(await getDocumentOrderArticleCount()).toBe(1);
+      expect(await documentExists(documentId)).toBe(true);
+      expect(await documentCarExists(documentId)).toBe(true);
+      expect(await documentClientExists(documentId)).toBe(true);
+      expect(await documentOrderExists(documentId)).toBe(true);
+      expect(await getDocumentOrderHeaderCount(documentId)).toBe(0);
+      expect(await getDocumentOrderArticleCount(documentId)).toBe(1);
     });
 
     it("throws an error if the document cannot be saved", async () => {
@@ -227,7 +211,7 @@ describe("documents - database queries", () => {
 
       try {
         const payload = {
-          document_id: "sth",
+          document_id: "sth2",
           type: DocumentType.invoice,
           order_id: order.order_id,
           client_id: order.client_id,

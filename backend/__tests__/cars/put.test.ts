@@ -2,7 +2,7 @@ import server from "@backend/server";
 
 import { getOwnersOfCar, getDbCar } from "@tests/cars/helpers";
 import { getAuthHeader } from "@tests/helpers";
-import { db_cleanup } from "@tests/factory/factory";
+import { smartCleanup } from "@tests/factory/factory";
 import { createCar } from "@tests/factory/car";
 import { createClient } from "@tests/factory/client";
 
@@ -11,13 +11,23 @@ describe("cars - PUT", () => {
     await server.ready();
   });
 
-  beforeEach(async () => {
-    await db_cleanup();
+  let cleanupCars: string[] = [];
+  let cleanupClients: string[] = [];
+  let cleanupOrders: string[] = [];
+
+  afterEach(async () => {
+    await smartCleanup({ cars: cleanupCars, clients: cleanupClients, orders: cleanupOrders });
+    cleanupCars = [];
+    cleanupClients = [];
+    cleanupOrders = [];
   });
 
   it("edits a car", async () => {
+    const oldOwner = await createClient();
     const newOwner = await createClient();
-    const car = await createCar([(await createClient()).client_id]);
+    cleanupClients.push(newOwner.client_id, oldOwner.client_id);
+    const car = await createCar([oldOwner.client_id]);
+    cleanupCars.push(car.car_id);
 
     const response = await server.inject({
       method: "PUT",
@@ -47,11 +57,12 @@ describe("cars - PUT", () => {
   ];
   for (const payload of invalidPayloads) {
     it(`returns 400 for ${JSON.stringify(payload)}`, async () => {
-      const car = createCar();
+      const car = await createCar();
+      cleanupCars.push(car.car_id);
       const response = await server.inject({
         method: "PUT",
         headers: { ...getAuthHeader() },
-        url: `/api/cars/${(await car).car_id}`,
+        url: `/api/cars/${car.car_id}`,
         payload,
       });
 

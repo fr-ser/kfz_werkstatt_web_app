@@ -1,27 +1,29 @@
 import server from "@backend/server";
 
 import { getAuthHeader } from "@tests/helpers";
-import { db_cleanup } from "@tests/factory/factory";
+import { smartCleanup } from "@tests/factory/factory";
 import { createCar } from "@tests/factory/car";
 import { createClient } from "@tests/factory/client";
 import { createOrder } from "@tests/factory/order";
-import { getCarCount } from "@tests/cars/helpers";
-import { getClientCount } from "@tests/clients/helpers";
-import { getOrderCount } from "@tests/orders/helpers";
+import { carExists } from "@tests/cars/helpers";
+import { clientExists } from "@tests/clients/helpers";
+import { orderExists } from "@tests/orders/helpers";
 
 describe("cars - DELETE", () => {
-  beforeAll(async () => {
-    await server.ready();
-  });
+  let cleanupCars: string[] = [];
+  let cleanupClients: string[] = [];
+  let cleanupOrders: string[] = [];
 
-  beforeEach(async () => {
-    await db_cleanup();
+  afterEach(async () => {
+    await smartCleanup({ cars: cleanupCars, clients: cleanupClients, orders: cleanupOrders });
+    cleanupCars = [];
+    cleanupClients = [];
+    cleanupOrders = [];
   });
 
   it("deletes a car", async () => {
     const car = await createCar();
 
-    expect(await getCarCount()).toBe(1);
     const response = await server.inject({
       method: "DELETE",
       headers: { ...getAuthHeader() },
@@ -29,7 +31,7 @@ describe("cars - DELETE", () => {
     });
 
     expect(response.statusCode).toEqual(200);
-    expect(await getCarCount()).toBe(0);
+    expect(await carExists(car.car_id)).toBe(false);
   });
 
   it("returns 404 for missing cars", async () => {
@@ -44,9 +46,11 @@ describe("cars - DELETE", () => {
   });
 
   it("returns 409 for a car with an owner", async () => {
-    const car = await createCar([(await createClient()).client_id]);
+    const owner = await createClient();
+    cleanupClients.push(owner.client_id);
+    const car = await createCar([owner.client_id]);
+    cleanupCars.push(car.car_id);
 
-    expect(await getCarCount()).toBe(1);
     const response = await server.inject({
       method: "DELETE",
       headers: { ...getAuthHeader() },
@@ -55,15 +59,17 @@ describe("cars - DELETE", () => {
 
     expect(response.statusCode).toEqual(409);
     expect(JSON.parse(response.payload).msg).toBeTruthy();
-    expect(await getCarCount()).toBe(1);
-    expect(await getClientCount()).toBe(1);
+
+    expect(await clientExists(owner.client_id)).toBe(true);
+    expect(await carExists(car.car_id)).toBe(true);
   });
 
   it("returns 409 for a car with an order", async () => {
     const car = await createCar();
-    await createOrder({ carId: car.car_id });
+    cleanupCars.push(car.car_id);
+    const order = await createOrder({ carId: car.car_id });
+    cleanupOrders.push(order.order_id);
 
-    expect(await getCarCount()).toBe(1);
     const response = await server.inject({
       method: "DELETE",
       headers: { ...getAuthHeader() },
@@ -72,7 +78,7 @@ describe("cars - DELETE", () => {
 
     expect(response.statusCode).toEqual(409);
     expect(JSON.parse(response.payload).msg).toBeTruthy();
-    expect(await getCarCount()).toBe(1);
-    expect(await getOrderCount()).toBe(1);
+    expect(await carExists(car.car_id)).toBe(true);
+    expect(await orderExists(order.order_id)).toBe(true);
   });
 });

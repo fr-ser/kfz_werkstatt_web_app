@@ -2,9 +2,9 @@ import { omit } from "lodash";
 
 import server from "@backend/server";
 
-import { getDbClient, getCarsOfClient, getClientCount } from "@tests/clients/helpers";
+import { getDbClient, getCarsOfClient } from "@tests/clients/helpers";
 import { getAuthHeader } from "@tests/helpers";
-import { db_cleanup } from "@tests/factory/factory";
+import { smartCleanup } from "@tests/factory/factory";
 import { createClient } from "@tests/factory/client";
 import { createCar } from "@tests/factory/car";
 
@@ -13,8 +13,13 @@ describe("clients - POST", () => {
     await server.ready();
   });
 
-  beforeEach(async () => {
-    await db_cleanup();
+  let cleanupCars: string[] = [];
+  let cleanupClients: string[] = [];
+
+  afterEach(async () => {
+    await smartCleanup({ cars: cleanupCars, clients: cleanupClients });
+    cleanupCars = [];
+    cleanupClients = [];
   });
 
   it("creates a client for a valid payload", async () => {
@@ -32,6 +37,8 @@ describe("clients - POST", () => {
       city: "city",
       street_and_number: "street 44",
     };
+    cleanupClients.push(payload.client_id);
+
     const response = await server.inject({
       method: "POST",
       headers: { ...getAuthHeader() },
@@ -40,7 +47,6 @@ describe("clients - POST", () => {
     });
 
     expect(response.statusCode).toEqual(201);
-    expect(await getClientCount()).toBe(1);
 
     const dbClient = await getDbClient(payload.client_id);
     for (const key of Object.keys(payload)) {
@@ -54,6 +60,8 @@ describe("clients - POST", () => {
       first_name: "first",
       last_name: "last",
     };
+    cleanupClients.push(payload.client_id);
+
     const response = await server.inject({
       method: "POST",
       headers: { ...getAuthHeader() },
@@ -62,7 +70,6 @@ describe("clients - POST", () => {
     });
 
     expect(response.statusCode).toEqual(201);
-    expect(await getClientCount()).toBe(1);
 
     const dbClient = await getDbClient(payload.client_id);
     for (const key of Object.keys(payload)) {
@@ -72,12 +79,15 @@ describe("clients - POST", () => {
 
   it("creates a client with a car", async () => {
     const car = await createCar();
+    cleanupCars.push(car.car_id);
     const payload = {
       client_id: "K123",
       first_name: "first",
       last_name: "last",
       car_ids: [car.car_id],
     };
+    cleanupClients.push(payload.client_id);
+
     const response = await server.inject({
       method: "POST",
       headers: { ...getAuthHeader() },
@@ -86,7 +96,6 @@ describe("clients - POST", () => {
     });
 
     expect(response.statusCode).toEqual(201);
-    expect(await getClientCount()).toBe(1);
 
     const dbClient = await getDbClient(payload.client_id);
     for (const key of Object.keys(omit(payload, "car_ids"))) {
@@ -102,6 +111,8 @@ describe("clients - POST", () => {
       first_name: "first",
       last_name: "last",
     };
+    cleanupClients.push(existingClient.client_id);
+
     const response = await server.inject({
       method: "POST",
       headers: { ...getAuthHeader() },
@@ -110,7 +121,6 @@ describe("clients - POST", () => {
     });
 
     expect(response.statusCode).toEqual(422);
-    expect(await getClientCount()).toBe(1);
   });
 
   describe("invalid payload", () => {
@@ -137,7 +147,6 @@ describe("clients - POST", () => {
         });
 
         expect(response.statusCode).toEqual(400);
-        expect(await getClientCount()).toBe(0);
       });
     }
 
@@ -155,7 +164,6 @@ describe("clients - POST", () => {
         });
 
         expect(response.statusCode).toEqual(400);
-        expect(await getClientCount()).toBe(0);
       });
     }
   });

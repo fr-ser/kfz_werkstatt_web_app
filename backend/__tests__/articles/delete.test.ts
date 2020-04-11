@@ -1,9 +1,7 @@
 import server from "@backend/server";
 
-import { getArticles } from "@backend/db/articles";
-
 import { getAuthHeader } from "@tests/helpers";
-import { db_cleanup } from "@tests/factory/factory";
+import { articleExists } from "@tests/articles/helpers";
 import { createArticle } from "@tests/factory/article";
 
 describe("articles - DELETE", () => {
@@ -11,14 +9,9 @@ describe("articles - DELETE", () => {
     await server.ready();
   });
 
-  beforeEach(async () => {
-    await db_cleanup();
-  });
-
   it("deletes a article", async () => {
     const article = await createArticle();
 
-    expect(await getArticles()).toHaveLength(1);
     const response = await server.inject({
       method: "DELETE",
       headers: { ...getAuthHeader() },
@@ -26,7 +19,7 @@ describe("articles - DELETE", () => {
     });
 
     expect(response.statusCode).toEqual(200);
-    expect(await getArticles()).toHaveLength(0);
+    expect(await articleExists(article.article_number)).toBeFalsy();
   });
 
   it("returns 404 for missing articles", async () => {

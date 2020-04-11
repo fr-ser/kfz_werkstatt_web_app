@@ -1,26 +1,19 @@
 import server from "@backend/server";
 
-import { getOrders } from "@backend/db/orders";
-
 import { getAuthHeader } from "@tests/helpers";
-import { db_cleanup } from "@tests/factory/factory";
 import { createOrder, createOrderItemArticle, createOrderItemHeader } from "@tests/factory/order";
+import { orderExists } from "@tests/orders/helpers";
 
 describe("orders - DELETE", () => {
   beforeAll(async () => {
     await server.ready();
   });
 
-  beforeEach(async () => {
-    await db_cleanup();
-  });
-
   it("deletes an order with details", async () => {
     const order = await createOrder();
-    createOrderItemArticle({ orderId: order.order_id });
-    createOrderItemHeader({ orderId: order.order_id });
+    await createOrderItemArticle({ orderId: order.order_id });
+    await createOrderItemHeader({ orderId: order.order_id });
 
-    expect(await getOrders()).toHaveLength(1);
     const response = await server.inject({
       method: "DELETE",
       headers: { ...getAuthHeader() },
@@ -28,7 +21,7 @@ describe("orders - DELETE", () => {
     });
 
     expect(response.statusCode).toEqual(200);
-    expect(await getOrders()).toHaveLength(0);
+    expect(await orderExists(order.order_id)).toBe(false);
   });
 
   it("returns 404 for missing orders", async () => {

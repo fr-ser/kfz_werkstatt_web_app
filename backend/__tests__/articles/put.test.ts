@@ -2,7 +2,7 @@ import server from "@backend/server";
 
 import { getDbArticle, articleExists } from "@tests/articles/helpers";
 import { getAuthHeader } from "@tests/helpers";
-import { db_cleanup } from "@tests/factory/factory";
+import { smartCleanup } from "@tests/factory/factory";
 import { createArticle } from "@tests/factory/article";
 
 describe("articles - PUT", () => {
@@ -10,13 +10,18 @@ describe("articles - PUT", () => {
     await server.ready();
   });
 
-  beforeEach(async () => {
-    await db_cleanup();
+  let cleanupArticles: string[] = [];
+
+  afterEach(async () => {
+    await smartCleanup({ articles: cleanupArticles });
+    cleanupArticles = [];
   });
 
   it("edits an article", async () => {
     const article = await createArticle();
+    cleanupArticles.push(article.article_number);
     const newNumber = "asdf";
+    cleanupArticles.push(newNumber);
 
     const response = await server.inject({
       method: "PUT",

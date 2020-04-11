@@ -2,18 +2,25 @@ import { NotFoundError } from "@backend/common";
 import { getCar, getCars, deleteCar, saveCar, editCar } from "@backend/db/cars";
 
 import { createCar } from "@tests/factory/car";
-import { db_cleanup } from "@tests/factory/factory";
+import { smartCleanup } from "@tests/factory/factory";
 import { createClient } from "../factory/client";
-import { getOwnersOfCar, getCarCount, carExists, getDbCar } from "@tests/cars/helpers";
+import { getOwnersOfCar, carExists, getDbCar } from "@tests/cars/helpers";
+import { GetCar } from "@backend/interfaces/api";
 
 describe("cars - database queries", () => {
-  beforeEach(async () => {
-    await db_cleanup();
+  let cleanupCars: string[] = [];
+  let cleanupClients: string[] = [];
+
+  afterEach(async () => {
+    await smartCleanup({ cars: cleanupCars, clients: cleanupClients });
+    cleanupCars = [];
+    cleanupClients = [];
   });
 
   describe("getCar", () => {
     it("returns the car with no owners", async () => {
       const dbCar = await createCar();
+      cleanupCars.push(dbCar.car_id);
 
       const apiCar = await getCar(dbCar.car_id);
 
@@ -26,7 +33,10 @@ describe("cars - database queries", () => {
     it("returns the car with two owners", async () => {
       const owner1 = await createClient();
       const owner2 = await createClient();
+      cleanupCars.push(owner1.client_id, owner2.client_id);
+
       const dbCar = await createCar([owner1.client_id, owner2.client_id]);
+      cleanupCars.push(dbCar.car_id);
 
       const apiCar = await getCar(dbCar.car_id);
 
@@ -54,20 +64,18 @@ describe("cars - database queries", () => {
   });
 
   describe("getCars", () => {
-    it("returns an empty list for no cars", async () => {
-      expect(await getCars()).toEqual([]);
-    });
-
     it("returns all cars", async () => {
       const dbCar1 = await createCar();
       const dbCar2 = await createCar();
+      cleanupCars.push(dbCar1.car_id, dbCar2.car_id);
 
       const apiCars = await getCars();
 
-      expect(apiCars).toHaveLength(2);
+      // could be greater due to other tests in parallel
+      expect(apiCars.length).toBeGreaterThanOrEqual(2);
 
-      const apiCar1 = apiCars.find(x => x.car_id === dbCar1.car_id);
-      const apiCar2 = apiCars.find(x => x.car_id === dbCar2.car_id);
+      const apiCar1 = apiCars.find((x) => x.car_id === dbCar1.car_id);
+      const apiCar2 = apiCars.find((x) => x.car_id === dbCar2.car_id);
 
       for (const key of Object.keys(dbCar1)) {
         expect((apiCar1 as any)[key]).toEqual((dbCar1 as any)[key]);
@@ -82,9 +90,11 @@ describe("cars - database queries", () => {
 
     it("returns cars with owners", async () => {
       const dbClient = await createClient();
+      cleanupClients.push(dbClient.client_id);
       const dbCar = await createCar([dbClient.client_id]);
+      cleanupCars.push(dbCar.car_id);
 
-      const apiCar = (await getCars())[0];
+      const apiCar = (await getCars()).find((apiCar) => apiCar.car_id === dbCar.car_id) as GetCar;
 
       for (const key of Object.keys(dbCar)) {
         expect((apiCar as any)[key]).toEqual((dbCar as any)[key]);
@@ -99,16 +109,13 @@ describe("cars - database queries", () => {
 
   describe("deleteCar", () => {
     it("deletes a car", async () => {
-      await createCar(); // one car, which should not be deleted
       const dbCar = await createCar();
 
       expect(await carExists(dbCar.car_id)).toBe(true);
-      expect(await getCarCount()).toBe(2);
 
       await deleteCar(dbCar.car_id);
 
       expect(await carExists(dbCar.car_id)).toBe(false);
-      expect(await getCarCount()).toBe(1);
     });
 
     it("throws the NotFoundError, if the car does not exist", async () => {
@@ -124,8 +131,8 @@ describe("cars - database queries", () => {
 
   describe("saveCar", () => {
     it("saves a car with no cars", async () => {
-      const carId = "sth";
-      expect(await carExists(carId)).toBe(false);
+      const carId = "sth" + Date.now();
+      cleanupCars.push(carId);
 
       const payload = {
         car_id: carId,
@@ -144,8 +151,9 @@ describe("cars - database queries", () => {
     it("saves a car with two cars", async () => {
       const owner1 = await createClient();
       const owner2 = await createClient();
-      const carId = "sth";
-      expect(await carExists(carId)).toBe(false);
+      cleanupClients.push(owner1.client_id, owner2.client_id);
+      const carId = "sth" + Date.now();
+      cleanupCars.push(carId);
 
       await saveCar({
         car_id: carId,
@@ -187,6 +195,7 @@ describe("cars - database queries", () => {
     for (const changeProperty of changeableStringProperties) {
       it(`changes the property: ${changeProperty}`, async () => {
         const car = await createCar();
+        cleanupCars.push(car.car_id);
 
         await editCar(car.car_id, { [changeProperty]: "newValue" });
 
@@ -204,6 +213,7 @@ describe("cars - database queries", () => {
     for (const changeProperty of changeableStringDateProperties) {
       it(`changes the property: ${changeProperty}`, async () => {
         const car = await createCar();
+        cleanupCars.push(car.car_id);
 
         await editCar(car.car_id, { [changeProperty]: "1990-12-31" });
 
@@ -216,6 +226,7 @@ describe("cars - database queries", () => {
     for (const changeProperty of changeableNumberProperties) {
       it(`changes the property: ${changeProperty}`, async () => {
         const car = await createCar();
+        cleanupCars.push(car.car_id);
 
         await editCar(car.car_id, { [changeProperty]: 12345 });
 
@@ -226,7 +237,9 @@ describe("cars - database queries", () => {
 
     it("changes multiple properties at once", async () => {
       const owner = await createClient();
+      cleanupClients.push(owner.client_id);
       const car = await createCar();
+      cleanupCars.push(car.car_id);
 
       await editCar(car.car_id, {
         license_plate: "HH-12-12",
@@ -264,7 +277,9 @@ describe("cars - database queries", () => {
     describe("change car owner", () => {
       it("adds a car owner", async () => {
         const client = await createClient();
+        cleanupClients.push(client.client_id);
         const car = await createCar();
+        cleanupCars.push(car.car_id);
 
         await editCar(car.car_id, {
           owner_ids: [client.client_id],
@@ -285,7 +300,9 @@ describe("cars - database queries", () => {
 
       it("edits a car owner", async () => {
         const newOwner = await createClient();
-        const car = await createCar([(await createClient()).client_id]);
+        const oldOwner = await createClient();
+        cleanupClients.push(newOwner.client_id, oldOwner.client_id);
+        const car = await createCar([oldOwner.client_id]);
 
         await editCar(car.car_id, {
           owner_ids: [newOwner.client_id],

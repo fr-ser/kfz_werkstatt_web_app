@@ -1,18 +1,16 @@
 import { test_pool } from "@tests/factory/factory";
 import { DbOrder, DbOrderItemArticle, DbOrderItemHeader } from "@backend/interfaces/db";
 
-export async function getOrderCount(): Promise<number> {
-  const result = await test_pool.query("SELECT count(*)::INTEGER as count_ FROM order_");
-  return result.rows[0].count_;
-}
-
-export async function getOrderItemsCount(): Promise<number> {
-  const result = await test_pool.query(`
+export async function getOrderItemsCount(orderId: string): Promise<number> {
+  const result = await test_pool.query(
+    `
     SELECT (
-      (SELECT count(*)::INTEGER FROM order_item_article) +
-      (SELECT count(*)::INTEGER FROM order_item_header)
+      (SELECT count(*)::INTEGER FROM order_item_article WHERE order_id = $1) +
+      (SELECT count(*)::INTEGER FROM order_item_header WHERE order_id = $1)
     ) as count_
-  `);
+  `,
+    [orderId]
+  );
   return result.rows[0].count_;
 }
 

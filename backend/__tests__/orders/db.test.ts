@@ -10,9 +10,8 @@ import {
 import { createCar } from "@tests/factory/car";
 import { createClient } from "@tests/factory/client";
 import { createOrder, createOrderItemArticle, createOrderItemHeader } from "@tests/factory/order";
-import { db_cleanup } from "@tests/factory/factory";
+import { smartCleanup } from "@tests/factory/factory";
 import {
-  getOrderCount,
   orderExists,
   getDbOrder,
   getOrderItemsCount,
@@ -21,8 +20,15 @@ import {
 } from "@tests/orders/helpers";
 
 describe("orders - database queries", () => {
-  beforeEach(async () => {
-    await db_cleanup();
+  let cleanupCars: string[] = [];
+  let cleanupClients: string[] = [];
+  let cleanupOrders: string[] = [];
+
+  afterEach(async () => {
+    await smartCleanup({ cars: cleanupCars, clients: cleanupClients, orders: cleanupOrders });
+    cleanupCars = [];
+    cleanupClients = [];
+    cleanupOrders = [];
   });
 
   describe("getOrder", () => {
@@ -33,6 +39,7 @@ describe("orders - database queries", () => {
         orderId: dbOrder.order_id,
         position: 2,
       });
+      cleanupOrders.push(dbOrder.order_id);
 
       const apiOrder = await getOrder(dbOrder.order_id);
 
@@ -67,23 +74,18 @@ describe("orders - database queries", () => {
   });
 
   describe("getOrders", () => {
-    it("returns an empty list for no orders", async () => {
-      expect(await getOrders()).toEqual([]);
-    });
-
     it("returns all orders", async () => {
       const dbOrder1 = await createOrder({ noPositions: true });
       const orderArticle = await createOrderItemArticle({
         orderId: dbOrder1.order_id,
       });
       const dbOrder2 = await createOrder({ noPositions: true });
+      cleanupOrders.push(dbOrder1.order_id, dbOrder2.order_id);
 
       const apiOrders = await getOrders();
 
-      expect(apiOrders).toHaveLength(2);
-
-      const apiOrder1 = apiOrders.find(x => x.order_id === dbOrder1.order_id);
-      const apiOrder2 = apiOrders.find(x => x.order_id === dbOrder2.order_id);
+      const apiOrder1 = apiOrders.find((x) => x.order_id === dbOrder1.order_id);
+      const apiOrder2 = apiOrders.find((x) => x.order_id === dbOrder2.order_id);
 
       for (const key of Object.keys(dbOrder1)) {
         expect((apiOrder1 as any)[key]).toEqual((dbOrder1 as any)[key]);
@@ -110,13 +112,11 @@ describe("orders - database queries", () => {
       await createOrderItemArticle({
         orderId: dbOrder.order_id,
       });
-      expect(await getOrderCount()).toBe(1);
-      expect(await getOrderItemsCount()).toBe(1);
 
       await deleteOrder(dbOrder.order_id);
 
-      expect(await getOrderCount()).toBe(0);
-      expect(await getOrderItemsCount()).toBe(0);
+      expect(await orderExists(dbOrder.order_id)).toBe(false);
+      expect(await getOrderItemsCount(dbOrder.order_id)).toBe(0);
     });
 
     it("throws the NotFoundError, if the order does not exist", async () => {
@@ -133,9 +133,11 @@ describe("orders - database queries", () => {
   describe("saveOrder", () => {
     it("saves an order without items", async () => {
       const client = await createClient();
+      cleanupClients.push(client.client_id);
       const car = await createCar();
+      cleanupCars.push(car.car_id);
       const orderId = "sth";
-      expect(await orderExists(orderId)).toBe(false);
+      cleanupOrders.push(orderId);
 
       const payload = {
         order_id: orderId,
@@ -156,13 +158,16 @@ describe("orders - database queries", () => {
       for (const [key, value] of Object.entries(dbOrder)) {
         expect((payload as any)[key]).toEqual(value);
       }
-      expect(await getOrderItemsCount()).toBe(0);
+      expect(await getOrderItemsCount(orderId)).toBe(0);
     });
 
     it("saves an order with items", async () => {
       const client = await createClient();
+      cleanupClients.push(client.client_id);
       const car = await createCar();
+      cleanupCars.push(car.car_id);
       const orderId = "sth";
+      cleanupOrders.push(orderId);
       expect(await orderExists(orderId)).toBe(false);
 
       const payload = {
@@ -231,6 +236,7 @@ describe("orders - database queries", () => {
     for (const { changeProperty, newValue } of changeProperties) {
       it(`changes the property: ${changeProperty}`, async () => {
         const order = await createOrder();
+        cleanupOrders.push(order.order_id);
 
         await editOrder(order.order_id, { [changeProperty]: newValue });
 
@@ -241,7 +247,9 @@ describe("orders - database queries", () => {
 
     it(`changes the property: car_id`, async () => {
       const newCar = await createCar();
+      cleanupCars.push(newCar.car_id);
       const order = await createOrder();
+      cleanupOrders.push(order.order_id);
 
       await editOrder(order.order_id, { car_id: newCar.car_id });
 
@@ -261,19 +269,19 @@ describe("orders - database queries", () => {
 
     it(`deletes order.items`, async () => {
       const order = await createOrder();
+      cleanupOrders.push(order.order_id);
 
       await createOrderItemHeader({ orderId: order.order_id });
-      expect(await getOrderItemsCount()).toBeGreaterThan(0);
 
       await editOrder(order.order_id, { items: [] });
 
-      expect(await getOrderItemsCount()).toBe(0);
+      expect(await getOrderItemsCount(order.order_id)).toBe(0);
     });
 
     it(`edits order.items`, async () => {
       const order = await createOrder({ noPositions: true });
+      cleanupOrders.push(order.order_id);
       await createOrderItemHeader({ orderId: order.order_id });
-      expect(await getOrderItemsCount()).toBe(1);
 
       const newOrderArticle = {
         position: 1,
@@ -284,8 +292,6 @@ describe("orders - database queries", () => {
         amount: 3.3,
       };
       await editOrder(order.order_id, { items: [newOrderArticle] });
-
-      expect(await getOrderItemsCount()).toBe(1);
 
       const orderArticle = (await getDbOrderArticles(order.order_id))[0];
       expect(orderArticle.position).toBe(newOrderArticle.position);
@@ -298,8 +304,11 @@ describe("orders - database queries", () => {
 
     it("changes multiple properties at once", async () => {
       const newClient = await createClient();
+      cleanupClients.push(newClient.client_id);
       const newCar = await createCar();
+      cleanupCars.push(newCar.car_id);
       const order = await createOrder();
+      cleanupOrders.push(order.order_id);
 
       await editOrder(order.order_id, {
         title: "HH-12-12",
@@ -317,6 +326,7 @@ describe("orders - database queries", () => {
 
     it("throws an error if the order cannot be edited", async () => {
       const order = await createOrder();
+      cleanupOrders.push(order.order_id);
 
       try {
         await editOrder(order.order_id, { client_id: "y" });

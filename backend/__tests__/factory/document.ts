@@ -1,3 +1,5 @@
+import * as faker from "faker";
+
 import { DbDocument } from "@backend/interfaces/db";
 import { DocumentType } from "@backend/interfaces/api";
 
@@ -29,7 +31,7 @@ export async function createDocument(options: OrderOptions = {}): Promise<DbDocu
   const client = await getDbClient(order.client_id);
   const car = await getDbCar(order.car_id);
 
-  const documentId = `Sth${Date.now()}`;
+  const documentId = `Sth${Date.now() + faker.random.number(100)}`;
 
   const result = await test_pool.query(
     `

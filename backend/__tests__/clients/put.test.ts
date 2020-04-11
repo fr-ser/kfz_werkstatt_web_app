@@ -2,7 +2,7 @@ import server from "@backend/server";
 
 import { getCarsOfClient, getDbClient } from "@tests/clients/helpers";
 import { getAuthHeader } from "@tests/helpers";
-import { db_cleanup } from "@tests/factory/factory";
+import { smartCleanup } from "@tests/factory/factory";
 import { createClient } from "@tests/factory/client";
 import { createCar } from "@tests/factory/car";
 
@@ -11,23 +11,31 @@ describe("clients - PUT", () => {
     await server.ready();
   });
 
-  beforeEach(async () => {
-    await db_cleanup();
+  let cleanupCars: string[] = [];
+  let cleanupClients: string[] = [];
+
+  afterEach(async () => {
+    await smartCleanup({ cars: cleanupCars, clients: cleanupClients });
+    cleanupCars = [];
+    cleanupClients = [];
   });
 
   it("edits a client", async () => {
-    const car = await createCar();
-    const client = await createClient([(await createCar()).car_id]);
+    const oldCar = await createCar();
+    const newCar = await createCar();
+    cleanupCars.push(oldCar.car_id, newCar.car_id);
+    const client = await createClient([oldCar.car_id]);
+    cleanupClients.push(client.client_id);
 
     const response = await server.inject({
       method: "PUT",
       headers: { ...getAuthHeader() },
-      url: `/api/clients/${(await client).client_id}`,
+      url: `/api/clients/${client.client_id}`,
       payload: {
         first_name: "Esteban",
         zip_code: 12345,
         birthday: "1990-12-31",
-        car_ids: [car.car_id],
+        car_ids: [newCar.car_id],
       },
     });
 
@@ -36,7 +44,7 @@ describe("clients - PUT", () => {
     expect(dbClient.first_name).toEqual("Esteban");
     expect(dbClient.zip_code).toEqual(12345);
     expect(dbClient.birthday).toEqual("1990-12-31");
-    expect(await getCarsOfClient(client.client_id)).toEqual(new Set([car.car_id]));
+    expect(await getCarsOfClient(client.client_id)).toEqual(new Set([newCar.car_id]));
   });
 
   const invalidPayloads = [
@@ -48,6 +56,8 @@ describe("clients - PUT", () => {
   for (const payload of invalidPayloads) {
     it(`returns 400 for ${JSON.stringify(payload)}`, async () => {
       const client = createClient();
+      cleanupClients.push((await client).client_id);
+
       const response = await server.inject({
         method: "PUT",
         headers: { ...getAuthHeader() },

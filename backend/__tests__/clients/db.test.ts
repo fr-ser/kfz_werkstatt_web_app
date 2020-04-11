@@ -1,19 +1,26 @@
 import { NotFoundError } from "@backend/common";
+import { GetClient } from "@backend/interfaces/api";
 import { getClient, getClients, deleteClient, saveClient, editClient } from "@backend/db/clients";
 
 import { createClient } from "@tests/factory/client";
 import { createCar } from "@tests/factory/car";
-import { db_cleanup } from "@tests/factory/factory";
-import { getCarsOfClient, getClientCount, clientExists, getDbClient } from "@tests/clients/helpers";
+import { smartCleanup } from "@tests/factory/factory";
+import { getCarsOfClient, clientExists, getDbClient } from "@tests/clients/helpers";
 
 describe("clients - database queries", () => {
-  beforeEach(async () => {
-    await db_cleanup();
+  let cleanupCars: string[] = [];
+  let cleanupClients: string[] = [];
+
+  afterEach(async () => {
+    await smartCleanup({ cars: cleanupCars, clients: cleanupClients });
+    cleanupCars = [];
+    cleanupClients = [];
   });
 
   describe("getClient", () => {
     it("returns the client with no cars", async () => {
       const dbClient = await createClient();
+      cleanupClients.push(dbClient.client_id);
 
       const apiClient = await getClient(dbClient.client_id);
 
@@ -26,7 +33,9 @@ describe("clients - database queries", () => {
     it("returns the client with two cars", async () => {
       const car1 = await createCar();
       const car2 = await createCar();
+      cleanupCars.push(car1.car_id, car2.car_id);
       const dbClient = await createClient([car1.car_id, car2.car_id]);
+      cleanupClients.push(dbClient.client_id);
 
       const apiClient = await getClient(dbClient.client_id);
 
@@ -38,7 +47,6 @@ describe("clients - database queries", () => {
         { car_id: car1.car_id, license_plate: car1.license_plate },
         { car_id: car2.car_id, license_plate: car2.license_plate },
       ];
-      // using set to ignore order
       expect(new Set(apiClient.cars)).toEqual(new Set(dbCars));
     });
 
@@ -54,20 +62,14 @@ describe("clients - database queries", () => {
   });
 
   describe("getClients", () => {
-    it("returns an empty list for no clients", async () => {
-      expect(await getClients()).toEqual([]);
-    });
-
     it("returns all clients", async () => {
       const dbClient1 = await createClient();
       const dbClient2 = await createClient();
+      cleanupClients.push(dbClient1.client_id, dbClient2.client_id);
 
       const apiClients = await getClients();
-
-      expect(apiClients).toHaveLength(2);
-
-      const apiClient1 = apiClients.find(x => x.client_id === dbClient1.client_id);
-      const apiClient2 = apiClients.find(x => x.client_id === dbClient2.client_id);
+      const apiClient1 = apiClients.find((x) => x.client_id === dbClient1.client_id);
+      const apiClient2 = apiClients.find((x) => x.client_id === dbClient2.client_id);
 
       for (const key of Object.keys(dbClient1)) {
         expect((apiClient1 as any)[key]).toEqual((dbClient1 as any)[key]);
@@ -82,9 +84,13 @@ describe("clients - database queries", () => {
 
     it("returns clients with cars", async () => {
       const dbCar = await createCar();
+      cleanupCars.push(dbCar.car_id);
       const dbClient = await createClient([dbCar.car_id]);
+      cleanupClients.push(dbClient.client_id);
 
-      const apiClient = (await getClients())[0];
+      const apiClient = (await getClients()).find(
+        (apiClient) => apiClient.client_id === dbClient.client_id
+      ) as GetClient;
 
       for (const key of Object.keys(dbClient)) {
         expect((apiClient as any)[key]).toEqual((dbClient as any)[key]);
@@ -97,16 +103,11 @@ describe("clients - database queries", () => {
 
   describe("deleteClient", () => {
     it("deletes a client", async () => {
-      await createClient(); // one client, which should not be deleted
       const dbClient = await createClient();
-
-      expect(await clientExists(dbClient.client_id)).toBe(true);
-      expect(await getClientCount()).toBe(2);
 
       await deleteClient(dbClient.client_id);
 
       expect(await clientExists(dbClient.client_id)).toBe(false);
-      expect(await getClientCount()).toBe(1);
     });
 
     it("throws the NotFoundError, if the client does not exist", async () => {
@@ -123,7 +124,7 @@ describe("clients - database queries", () => {
   describe("saveClient", () => {
     it("saves a client with no cars", async () => {
       const clientId = "sth";
-      expect(await clientExists(clientId)).toBe(false);
+      cleanupClients.push(clientId);
 
       const payload = {
         client_id: clientId,
@@ -132,9 +133,9 @@ describe("clients - database queries", () => {
       };
       await saveClient(payload);
 
-      const dbOrder = await getDbClient(clientId);
+      const dbClient = await getDbClient(clientId);
       for (const [key, value] of Object.entries(payload)) {
-        expect((dbOrder as any)[key]).toEqual(value);
+        expect((dbClient as any)[key]).toEqual(value);
       }
     });
 
@@ -150,8 +151,9 @@ describe("clients - database queries", () => {
     it("saves a client with two cars", async () => {
       const car1 = await createCar();
       const car2 = await createCar();
+      cleanupCars.push(car1.car_id, car2.car_id);
       const clientId = "sth";
-      expect(await clientExists(clientId)).toBe(false);
+      cleanupClients.push(clientId);
 
       await saveClient({
         client_id: clientId,
@@ -180,6 +182,7 @@ describe("clients - database queries", () => {
     for (const changeProperty of changeableStringProperties) {
       it(`changes the property: ${changeProperty}`, async () => {
         const client = await createClient();
+        cleanupClients.push(client.client_id);
 
         await editClient(client.client_id, { [changeProperty]: "newValue" });
 
@@ -190,6 +193,7 @@ describe("clients - database queries", () => {
 
     it(`changes the property: zip_code`, async () => {
       const client = await createClient();
+      cleanupClients.push(client.client_id);
 
       await editClient(client.client_id, { zip_code: 12345 });
 
@@ -199,6 +203,7 @@ describe("clients - database queries", () => {
 
     it(`changes the property: birthday`, async () => {
       const client = await createClient();
+      cleanupClients.push(client.client_id);
 
       await editClient(client.client_id, { birthday: "1990-12-31" });
 
@@ -208,7 +213,9 @@ describe("clients - database queries", () => {
 
     it("changes multiple properties at once", async () => {
       const car = await createCar();
+      cleanupCars.push(car.car_id);
       const client = await createClient();
+      cleanupClients.push(client.client_id);
 
       await editClient(client.client_id, {
         first_name: "Fernando",
@@ -246,7 +253,9 @@ describe("clients - database queries", () => {
     describe("change car ownership", () => {
       it("adds a car ownership", async () => {
         const car = await createCar();
+        cleanupCars.push(car.car_id);
         const client = await createClient();
+        cleanupClients.push(client.client_id);
 
         await editClient(client.client_id, {
           car_ids: [car.car_id],
@@ -256,7 +265,10 @@ describe("clients - database queries", () => {
       });
 
       it("deletes a car ownership", async () => {
-        const client = await createClient([(await createCar()).car_id]);
+        const car = await createCar();
+        cleanupCars.push(car.car_id);
+        const client = await createClient([car.car_id]);
+        cleanupClients.push(client.client_id);
 
         await editClient(client.client_id, {
           car_ids: [],
@@ -266,8 +278,11 @@ describe("clients - database queries", () => {
       });
 
       it("edits a car ownership", async () => {
+        const oldCar = await createCar();
         const newCar = await createCar();
-        const client = await createClient([(await createCar()).car_id]);
+        cleanupCars.push(oldCar.car_id, newCar.car_id);
+        const client = await createClient([oldCar.car_id]);
+        cleanupClients.push(client.client_id);
 
         await editClient(client.client_id, {
           car_ids: [newCar.car_id],

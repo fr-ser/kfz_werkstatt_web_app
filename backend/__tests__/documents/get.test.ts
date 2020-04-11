@@ -1,8 +1,7 @@
 import server from "@backend/server";
-import { ApiOrderItemHeader, ApiOrderItemArticle } from "@backend/interfaces/api";
+import { ApiOrderItemHeader, ApiOrderItemArticle, GetDocument } from "@backend/interfaces/api";
 
 import { createDocument } from "@tests/factory/document";
-import { db_cleanup } from "@tests/factory/factory";
 import { getAuthHeader } from "@tests/helpers";
 import { createOrder, createOrderItemHeader, createOrderItemArticle } from "@tests/factory/order";
 import {
@@ -20,14 +19,9 @@ describe("documents - GET", () => {
     await server.ready();
   });
 
-  beforeEach(async () => {
-    await db_cleanup();
-  });
-
   describe("document list", () => {
     it("returns the list of documents", async () => {
-      await createDocument();
-      await createDocument();
+      const documentList = [await createDocument(), await createDocument()];
 
       const response = await server.inject({
         method: "GET",
@@ -36,7 +30,13 @@ describe("documents - GET", () => {
       });
 
       expect(response.statusCode).toEqual(200);
-      expect(JSON.parse(response.payload)).toHaveLength(2);
+      const respDocuments = JSON.parse(response.payload) as GetDocument[];
+
+      expect(
+        documentList.every((document) =>
+          respDocuments.find((respDocument) => respDocument.document_id === document.document_id)
+        )
+      ).toBe(true);
     });
 
     it("returns correct document properties", async () => {
@@ -52,7 +52,9 @@ describe("documents - GET", () => {
       });
 
       expect(response.statusCode).toBe(200);
-      const apiDocument = JSON.parse(response.payload)[0];
+      const apiDocument = JSON.parse(response.payload).find(
+        (apiDoc: GetDocument) => apiDoc.document_id === dbDocument.document_id
+      );
 
       expect(apiDocument.document_id).toBe(dbDocument.document_id);
       expect(apiDocument.creation_date).toBe(dbDocument.creation_date);
@@ -75,15 +77,6 @@ describe("documents - GET", () => {
 
       const apiItem = apiDocument.items[1] as ApiOrderItemArticle;
       compareDocumentOrderArticle(apiItem, orderArticle);
-    });
-
-    it("returns an empty list without errors", async () => {
-      const response = await server.inject({
-        method: "GET",
-        headers: { ...getAuthHeader() },
-        url: "/api/documents",
-      });
-      expect(JSON.parse(response.payload)).toEqual([]);
     });
   });
 

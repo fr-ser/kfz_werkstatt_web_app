@@ -13,9 +13,8 @@ interface orderOptions {
   carId?: string;
   noPositions?: boolean;
 }
-export async function createOrder(opts?: orderOptions): Promise<DbOrder> {
-  const options = opts || {};
-  const orderId = `Auf${Date.now()}`;
+export async function createOrder(options: orderOptions = {}): Promise<DbOrder> {
+  const orderId = `Auf${Date.now()}${faker.random.number(100)}`;
 
   const result = await test_pool.query(
     `

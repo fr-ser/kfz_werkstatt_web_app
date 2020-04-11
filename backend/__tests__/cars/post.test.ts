@@ -2,9 +2,9 @@ import { omit } from "lodash";
 
 import server from "@backend/server";
 
-import { getDbCar, getOwnersOfCar, getCarCount } from "@tests/cars/helpers";
+import { getDbCar, getOwnersOfCar } from "@tests/cars/helpers";
 import { getAuthHeader } from "@tests/helpers";
-import { db_cleanup } from "@tests/factory/factory";
+import { smartCleanup } from "@tests/factory/factory";
 import { createCar } from "@tests/factory/car";
 import { createClient } from "../factory/client";
 
@@ -13,13 +13,20 @@ describe("cars - POST", () => {
     await server.ready();
   });
 
-  beforeEach(async () => {
-    await db_cleanup();
+  let cleanupCars: string[] = [];
+  let cleanupClients: string[] = [];
+  let cleanupOrders: string[] = [];
+
+  afterEach(async () => {
+    await smartCleanup({ cars: cleanupCars, clients: cleanupClients, orders: cleanupOrders });
+    cleanupCars = [];
+    cleanupClients = [];
+    cleanupOrders = [];
   });
 
   it("creates a car for a valid payload", async () => {
     const payload = {
-      car_id: "A123",
+      car_id: "A1234",
       license_plate: "license_plate",
       manufacturer: "manufacturer",
       model: "model",
@@ -39,6 +46,8 @@ describe("cars - POST", () => {
       timing_belt_date: "2012-12-12",
       timing_belt_mileage: 12.34,
     };
+    cleanupCars.push(payload.car_id);
+
     const response = await server.inject({
       method: "POST",
       headers: { ...getAuthHeader() },
@@ -47,7 +56,6 @@ describe("cars - POST", () => {
     });
 
     expect(response.statusCode).toEqual(201);
-    expect(await getCarCount()).toBe(1);
 
     const dbCar = await getDbCar(payload.car_id);
     for (const key of Object.keys(payload)) {
@@ -57,11 +65,13 @@ describe("cars - POST", () => {
 
   it("creates a car for a minimal payload", async () => {
     const payload = {
-      car_id: "A123",
+      car_id: "A1235",
       license_plate: "license_plate",
       manufacturer: "manufacturer",
       model: "model",
     };
+    cleanupCars.push(payload.car_id);
+
     const response = await server.inject({
       method: "POST",
       headers: { ...getAuthHeader() },
@@ -70,7 +80,6 @@ describe("cars - POST", () => {
     });
 
     expect(response.statusCode).toEqual(201);
-    expect(await getCarCount()).toBe(1);
 
     const dbCar = await getDbCar(payload.car_id);
     for (const key of Object.keys(payload)) {
@@ -80,13 +89,16 @@ describe("cars - POST", () => {
 
   it("creates a car with an owner", async () => {
     const client = await createClient();
+    cleanupClients.push(client.client_id);
     const payload = {
-      car_id: "A123",
+      car_id: "A1236",
       license_plate: "license_plate",
       manufacturer: "manufacturer",
       model: "model",
       owner_ids: [client.client_id],
     };
+    cleanupCars.push(payload.car_id);
+
     const response = await server.inject({
       method: "POST",
       headers: { ...getAuthHeader() },
@@ -95,7 +107,6 @@ describe("cars - POST", () => {
     });
 
     expect(response.statusCode).toEqual(201);
-    expect(await getCarCount()).toBe(1);
 
     const dbCar = await getDbCar(payload.car_id);
     for (const key of Object.keys(omit(payload, "owner_ids"))) {
@@ -112,6 +123,8 @@ describe("cars - POST", () => {
       manufacturer: "manufacturer",
       model: "model",
     };
+    cleanupCars.push(existingCar.car_id, payload.car_id);
+
     const response = await server.inject({
       method: "POST",
       headers: { ...getAuthHeader() },
@@ -120,12 +133,11 @@ describe("cars - POST", () => {
     });
 
     expect(response.statusCode).toEqual(422);
-    expect(await getCarCount()).toBe(1);
   });
 
   describe("invalid payload", () => {
     const validPayload = {
-      car_id: "A123",
+      car_id: "A1237",
       license_plate: "a",
       manufacturer: "a",
       model: "a",
@@ -150,7 +162,6 @@ describe("cars - POST", () => {
         });
 
         expect(response.statusCode).toEqual(400);
-        expect(await getCarCount()).toBe(0);
       });
     }
 
@@ -168,7 +179,6 @@ describe("cars - POST", () => {
         });
 
         expect(response.statusCode).toEqual(400);
-        expect(await getCarCount()).toBe(0);
       });
     }
   });

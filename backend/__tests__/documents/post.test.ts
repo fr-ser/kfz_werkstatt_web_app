@@ -2,7 +2,6 @@ import server from "@backend/server";
 
 import {
   getDbDocument,
-  getDocumentCount,
   getDbDocumentOrder,
   compareDocumentOrder,
   getDbDocumentCar,
@@ -13,7 +12,6 @@ import {
   getDocumentOrderArticleCount,
 } from "@tests/documents/helpers";
 import { getAuthHeader, getDateStr } from "@tests/helpers";
-import { db_cleanup } from "@tests/factory/factory";
 import { createDocument } from "@tests/factory/document";
 import { createOrder, createOrderItemHeader } from "@tests/factory/order";
 import { getDbCar } from "@tests/cars/helpers";
@@ -25,11 +23,7 @@ describe("documents - POST", () => {
     await server.ready();
   });
 
-  beforeEach(async () => {
-    await db_cleanup();
-  });
-
-  it("creates an document for a valid payload", async () => {
+  it("creates a document for a valid payload", async () => {
     const order = await createOrder();
 
     const payload = {
@@ -47,7 +41,6 @@ describe("documents - POST", () => {
     });
 
     expect(response.statusCode).toEqual(201);
-    expect(await getDocumentCount()).toBe(1);
 
     const dbDocument = await getDbDocument(payload.document_id);
     expect(dbDocument.document_id).toBe(payload.document_id);
@@ -63,8 +56,9 @@ describe("documents - POST", () => {
     const dbDocumentClient = await getDbDocumentClient(dbDocument.document_id);
     compareDocumentClient(dbDocumentClient, await getDbClient(order.client_id));
 
-    expect(await getOrderItemsCount()).toBe(
-      (await getDocumentOrderHeaderCount()) + (await getDocumentOrderArticleCount())
+    expect(await getOrderItemsCount(order.order_id)).toBe(
+      (await getDocumentOrderHeaderCount(payload.document_id)) +
+        (await getDocumentOrderArticleCount(payload.document_id))
     );
   });
 
@@ -87,7 +81,6 @@ describe("documents - POST", () => {
     });
 
     expect(response.statusCode).toEqual(422);
-    expect(await getDocumentCount()).toBe(1);
   });
 
   it("returns 422 for an order without articles", async () => {
@@ -109,8 +102,8 @@ describe("documents - POST", () => {
     });
 
     expect(response.statusCode).toEqual(422);
-    expect(await getDocumentCount()).toBe(0);
   });
+
   describe("invalid payload", () => {
     const validPayload = {
       document_id: "sth_id",
@@ -135,7 +128,6 @@ describe("documents - POST", () => {
         });
 
         expect(response.statusCode).toEqual(400);
-        expect(await getDocumentCount()).toBe(0);
       });
     }
 
@@ -153,7 +145,6 @@ describe("documents - POST", () => {
         });
 
         expect(response.statusCode).toEqual(400);
-        expect(await getDocumentCount()).toBe(0);
       });
     }
   });

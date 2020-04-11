@@ -5,12 +5,7 @@ export async function getOwnersOfCar(carId: string): Promise<Set<string>> {
   const result = await test_pool.query("SELECT client_id from car_ownership WHERE car_id = $1", [
     carId,
   ]);
-  return new Set(result.rows.map(row => row.client_id));
-}
-
-export async function getCarCount(): Promise<number> {
-  const result = await test_pool.query("SELECT count(*)::INTEGER as count_ FROM car");
-  return result.rows[0].count_;
+  return new Set(result.rows.map((row) => row.client_id));
 }
 
 export async function carExists(carId: string): Promise<boolean> {

@@ -7,7 +7,7 @@ import { getRandomDate } from "@tests/helpers";
 
 export async function createCar(ownerIds?: string[]): Promise<DbCar> {
   const car = {
-    car_id: `A${Date.now()}`,
+    car_id: `A${Date.now()}${faker.random.number(100)}`,
     license_plate: faker.random.alphaNumeric(10),
     manufacturer: faker.vehicle.manufacturer(),
     model: faker.vehicle.model(),

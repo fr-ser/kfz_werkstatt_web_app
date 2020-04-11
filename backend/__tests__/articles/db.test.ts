@@ -8,17 +8,21 @@ import {
 } from "@backend/db/articles";
 
 import { createArticle } from "@tests/factory/article";
-import { db_cleanup } from "@tests/factory/factory";
-import { getArticleCount, articleExists, getDbArticle } from "@tests/articles/helpers";
+import { smartCleanup } from "@tests/factory/factory";
+import { articleExists, getDbArticle } from "@tests/articles/helpers";
 
 describe("articles - database queries", () => {
-  beforeEach(async () => {
-    await db_cleanup();
+  let cleanupArticles: string[] = [];
+
+  afterEach(async () => {
+    await smartCleanup({ articles: cleanupArticles });
+    cleanupArticles = [];
   });
 
   describe("getArticle", () => {
     it("returns the article", async () => {
       const dbArticle = await createArticle();
+      cleanupArticles.push(dbArticle.article_number);
 
       const apiArticle = await getArticle(dbArticle.article_number);
 
@@ -39,20 +43,19 @@ describe("articles - database queries", () => {
   });
 
   describe("getArticles", () => {
-    it("returns an empty list for no articles", async () => {
-      expect(await getArticles()).toEqual([]);
-    });
-
     it("returns all articles", async () => {
       const dbArticle1 = await createArticle();
       const dbArticle2 = await createArticle();
+      cleanupArticles.push(dbArticle1.article_number);
+      cleanupArticles.push(dbArticle2.article_number);
 
       const apiArticles = await getArticles();
 
-      expect(apiArticles).toHaveLength(2);
+      // could be greater because of interference of other tests
+      expect(apiArticles.length).toBeGreaterThanOrEqual(2);
 
-      const apiArticle1 = apiArticles.find(x => x.article_number === dbArticle1.article_number);
-      const apiArticle2 = apiArticles.find(x => x.article_number === dbArticle2.article_number);
+      const apiArticle1 = apiArticles.find((x) => x.article_number === dbArticle1.article_number);
+      const apiArticle2 = apiArticles.find((x) => x.article_number === dbArticle2.article_number);
 
       for (const key of Object.keys(dbArticle1)) {
         expect((apiArticle1 as any)[key]).toEqual((dbArticle1 as any)[key]);
@@ -88,8 +91,8 @@ describe("articles - database queries", () => {
 
   describe("saveArticle", () => {
     it("saves an article", async () => {
-      const articleNumber = "sth";
-      expect(await articleExists(articleNumber)).toBe(false);
+      const articleNumber = "sth" + Date.now();
+      cleanupArticles.push(articleNumber);
 
       const payload = {
         article_number: articleNumber,
@@ -119,6 +122,7 @@ describe("articles - database queries", () => {
     for (const changeProperty of changeableStringProperties) {
       it(`changes the property: ${changeProperty}`, async () => {
         const article = await createArticle();
+        cleanupArticles.push(article.article_number);
 
         await editArticle(article.article_number, { [changeProperty]: "newValue" });
 
@@ -131,6 +135,7 @@ describe("articles - database queries", () => {
     for (const changeProperty of changeableNumberProperties) {
       it(`changes the property: ${changeProperty}`, async () => {
         const article = await createArticle();
+        cleanupArticles.push(article.article_number);
 
         await editArticle(article.article_number, { [changeProperty]: 12345 });
 
@@ -141,6 +146,7 @@ describe("articles - database queries", () => {
 
     it("changes multiple properties at once", async () => {
       const article = await createArticle();
+      cleanupArticles.push(article.article_number);
 
       await editArticle(article.article_number, {
         description: "HH-12-12",

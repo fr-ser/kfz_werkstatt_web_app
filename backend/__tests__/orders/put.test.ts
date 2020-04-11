@@ -1,8 +1,7 @@
 import server from "@backend/server";
 
-import { getDbOrder, getOrderItemsCount, getDbOrderArticles } from "@tests/orders/helpers";
+import { getDbOrder, getDbOrderArticles, getOrderItemsCount } from "@tests/orders/helpers";
 import { getAuthHeader } from "@tests/helpers";
-import { db_cleanup } from "@tests/factory/factory";
 import { createOrder, createOrderItemHeader } from "@tests/factory/order";
 import { createCar } from "@tests/factory/car";
 import { createClient } from "@tests/factory/client";
@@ -10,10 +9,6 @@ import { createClient } from "@tests/factory/client";
 describe("orders - PUT", () => {
   beforeAll(async () => {
     await server.ready();
-  });
-
-  beforeEach(async () => {
-    await db_cleanup();
   });
 
   it("edits an order", async () => {
@@ -58,7 +53,7 @@ describe("orders - PUT", () => {
       expect((dbOrder as any)[key]).toEqual((payload as any)[key]);
     }
 
-    expect(await getOrderItemsCount()).toBe(1);
+    expect(await getOrderItemsCount(order.order_id)).toBe(1);
 
     const orderArticles = await getDbOrderArticles(order.order_id);
     expect(orderArticles).toHaveLength(1);

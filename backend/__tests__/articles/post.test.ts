@@ -1,8 +1,8 @@
 import server from "@backend/server";
 
-import { getDbArticle, getArticleCount } from "@tests/articles/helpers";
+import { getDbArticle } from "@tests/articles/helpers";
 import { getAuthHeader } from "@tests/helpers";
-import { db_cleanup } from "@tests/factory/factory";
+import { smartCleanup } from "@tests/factory/factory";
 import { createArticle } from "@tests/factory/article";
 
 describe("articles - POST", () => {
@@ -10,17 +10,22 @@ describe("articles - POST", () => {
     await server.ready();
   });
 
-  beforeEach(async () => {
-    await db_cleanup();
+  let cleanupArticles: string[] = [];
+
+  afterEach(async () => {
+    await smartCleanup({ articles: cleanupArticles });
+    cleanupArticles = [];
   });
 
   it("creates an article for a valid payload", async () => {
     const payload = {
-      article_number: "Art123",
+      article_number: "Art1234",
       description: "license_plate",
       price: 12.34,
       stock_amount: 12.34,
     };
+    cleanupArticles.push("Art1234");
+
     const response = await server.inject({
       method: "POST",
       headers: { ...getAuthHeader() },
@@ -29,7 +34,6 @@ describe("articles - POST", () => {
     });
 
     expect(response.statusCode).toEqual(201);
-    expect(await getArticleCount()).toBe(1);
 
     const dbArticle = await getDbArticle(payload.article_number);
     for (const key of Object.keys(payload)) {
@@ -39,10 +43,12 @@ describe("articles - POST", () => {
 
   it("creates an article for a minimal payload", async () => {
     const payload = {
-      article_number: "Art123",
+      article_number: "Art1235",
       description: "license_plate",
       price: 22,
     };
+    cleanupArticles.push("Art1235");
+
     const response = await server.inject({
       method: "POST",
       headers: { ...getAuthHeader() },
@@ -51,7 +57,6 @@ describe("articles - POST", () => {
     });
 
     expect(response.statusCode).toEqual(201);
-    expect(await getArticleCount()).toBe(1);
 
     const dbArticle = await getDbArticle(payload.article_number);
     for (const key of Object.keys(payload)) {
@@ -61,11 +66,15 @@ describe("articles - POST", () => {
 
   it("returns 422 for database errors (duplicate key)", async () => {
     const existingArticle = await createArticle();
+    cleanupArticles.push(existingArticle.article_number);
+
     const payload = {
       article_number: existingArticle.article_number,
       description: "license_plate",
       price: 22,
     };
+
+    const existingDbArticle = await getDbArticle(existingArticle.article_number);
     const response = await server.inject({
       method: "POST",
       headers: { ...getAuthHeader() },
@@ -74,21 +83,19 @@ describe("articles - POST", () => {
     });
 
     expect(response.statusCode).toEqual(422);
-    expect(await getArticleCount()).toBe(1);
+    expect(existingDbArticle).toEqual(await getDbArticle(existingArticle.article_number));
   });
 
   describe("invalid payload", () => {
     const validPayload = {
       article_number: "Art123",
-      license_plate: "a",
-      manufacturer: "a",
-      model: "a",
+      description: "license_plate",
+      price: 22,
     };
     const invalidPayloads = [
       {},
       { some: "weird stuff" },
       { ...validPayload, some: "valid and invalid stuff" },
-      { ...validPayload, article_number: "Artinvalid_id" },
       { ...validPayload, stock_amount: -1 },
       { ...validPayload, price: "yesterday" },
     ];
@@ -102,11 +109,10 @@ describe("articles - POST", () => {
         });
 
         expect(response.statusCode).toEqual(400);
-        expect(await getArticleCount()).toBe(0);
       });
     }
 
-    const requiredProperties = ["description"];
+    const requiredProperties = ["description", "article_number", "price"];
     for (const property of requiredProperties) {
       it(`returns 400 for missing ${property}`, async () => {
         const payload: any = { ...validPayload };
@@ -120,7 +126,6 @@ describe("articles - POST", () => {
         });
 
         expect(response.statusCode).toEqual(400);
-        expect(await getArticleCount()).toBe(0);
       });
     }
   });

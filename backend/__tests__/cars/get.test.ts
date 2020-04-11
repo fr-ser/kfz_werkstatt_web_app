@@ -1,7 +1,7 @@
 import server from "@backend/server";
 
 import { createCar } from "@tests/factory/car";
-import { db_cleanup } from "@tests/factory/factory";
+import { smartCleanup } from "@tests/factory/factory";
 import { getAuthHeader } from "@tests/helpers";
 import { GetCar } from "@backend/interfaces/api";
 import { createClient } from "../factory/client";
@@ -11,28 +11,37 @@ describe("cars - GET", () => {
     await server.ready();
   });
 
-  beforeEach(async () => {
-    await db_cleanup();
+  let cleanupCars: string[] = [];
+  let cleanupClients: string[] = [];
+
+  afterEach(async () => {
+    await smartCleanup({ cars: cleanupCars, clients: cleanupClients });
+    cleanupCars = [];
+    cleanupClients = [];
   });
 
   describe("car list", () => {
     it("returns the list of cars", async () => {
-      await createCar();
-      await createCar();
+      const carList = [await createCar(), await createCar()];
+      cleanupCars.push(...carList.map((car) => car.car_id));
 
       const response = await server.inject({
         method: "GET",
         headers: { ...getAuthHeader() },
         url: "/api/cars",
       });
-      const jsonResp = JSON.parse(response.payload);
-
       expect(response.statusCode).toEqual(200);
-      expect(jsonResp.length).toEqual(2);
+
+      const respCars: GetCar[] = JSON.parse(response.payload);
+
+      expect(
+        carList.every((car) => respCars.find((respCar) => respCar.car_id === car.car_id))
+      ).toBe(true);
     });
 
     it("returns correct car properties", async () => {
       const dbCar = await createCar();
+      cleanupCars.push(dbCar.car_id);
 
       const response = await server.inject({
         method: "GET",
@@ -42,20 +51,13 @@ describe("cars - GET", () => {
 
       expect(response.statusCode).toEqual(200);
 
-      const apiCar: GetCar = JSON.parse(response.payload)[0];
+      const apiCar = JSON.parse(response.payload).find(
+        (car: GetCar) => car.car_id === dbCar.car_id
+      );
       for (const key of Object.keys(dbCar)) {
-        expect((dbCar as any)[key]).toEqual((apiCar as any)[key]);
+        expect(apiCar[key]).toEqual((dbCar as any)[key]);
       }
       expect(apiCar.owners).toEqual([]);
-    });
-
-    it("returns an empty list without errors", async () => {
-      const response = await server.inject({
-        method: "GET",
-        headers: { ...getAuthHeader() },
-        url: "/api/cars",
-      });
-      expect(response.payload).toEqual(JSON.stringify([]));
     });
   });
 
@@ -63,8 +65,10 @@ describe("cars - GET", () => {
     it("returns the the car", async () => {
       const owner1 = await createClient();
       const owner2 = await createClient();
-      const ownedCarIds = [owner1.client_id, owner2.client_id];
-      const dbCar = await createCar(ownedCarIds);
+      const carOwnerIds = [owner1.client_id, owner2.client_id];
+      cleanupClients.push(...carOwnerIds);
+      const dbCar = await createCar(carOwnerIds);
+      cleanupCars.push(dbCar.car_id);
 
       const response = await server.inject({
         method: "GET",
@@ -74,11 +78,13 @@ describe("cars - GET", () => {
 
       expect(response.statusCode).toEqual(200);
 
-      const apiCar: GetCar = JSON.parse(response.payload);
+      const apiCar = JSON.parse(response.payload);
       for (const key of Object.keys(dbCar)) {
-        expect((dbCar as any)[key]).toEqual((apiCar as any)[key]);
+        expect((dbCar as any)[key]).toEqual(apiCar[key]);
       }
-      expect(new Set(apiCar.owners.map(val => val.client_id))).toEqual(new Set(ownedCarIds));
+      expect(new Set((apiCar as GetCar).owners.map((val) => val.client_id))).toEqual(
+        new Set(carOwnerIds)
+      );
     });
 
     it("returns the 404 for non existing cars", async () => {

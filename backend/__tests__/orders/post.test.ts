@@ -2,13 +2,12 @@ import server from "@backend/server";
 
 import {
   getDbOrder,
-  getOrderCount,
-  getOrderItemsCount,
   getDbOrderArticles,
   getDbOrderHeaders,
+  orderExists,
+  getOrderItemsCount,
 } from "@tests/orders/helpers";
 import { getAuthHeader } from "@tests/helpers";
-import { db_cleanup } from "@tests/factory/factory";
 import { createOrder } from "@tests/factory/order";
 import { createCar } from "@tests/factory/car";
 import { createClient } from "@tests/factory/client";
@@ -16,10 +15,6 @@ import { createClient } from "@tests/factory/client";
 describe("orders - POST", () => {
   beforeAll(async () => {
     await server.ready();
-  });
-
-  beforeEach(async () => {
-    await db_cleanup();
   });
 
   it("creates an order for a valid payload", async () => {
@@ -54,8 +49,8 @@ describe("orders - POST", () => {
     });
 
     expect(response.statusCode).toEqual(201);
-    expect(await getOrderCount()).toBe(1);
-    expect(await getOrderItemsCount()).toBe(2);
+    expect(await orderExists(payload.order_id)).toBe(true);
+    expect(await getOrderItemsCount(payload.order_id)).toBe(2);
 
     const dbOrder = await getDbOrder(payload.order_id);
     for (const key of Object.keys(payload)) {
@@ -81,7 +76,7 @@ describe("orders - POST", () => {
 
   it("creates an order for a minimal payload", async () => {
     const payload = {
-      order_id: "Auf123",
+      order_id: "Auf1234",
       car_id: (await createCar()).car_id,
       client_id: (await createClient()).client_id,
       title: "Repair 213",
@@ -99,8 +94,8 @@ describe("orders - POST", () => {
     });
 
     expect(response.statusCode).toEqual(201);
-    expect(await getOrderCount()).toBe(1);
-    expect(await getOrderItemsCount()).toBe(0);
+    expect(await orderExists(payload.order_id)).toBe(true);
+    expect(await getOrderItemsCount(payload.order_id)).toBe(0);
 
     const dbOrder = await getDbOrder(payload.order_id);
     for (const key of Object.keys(payload)) {
@@ -132,7 +127,6 @@ describe("orders - POST", () => {
     });
 
     expect(response.statusCode).toEqual(422);
-    expect(await getOrderCount()).toBe(1);
   });
 
   describe("invalid payload", () => {
@@ -173,7 +167,6 @@ describe("orders - POST", () => {
         });
 
         expect(response.statusCode).toEqual(400);
-        expect(await getOrderCount()).toBe(0);
       });
     }
 
@@ -201,7 +194,6 @@ describe("orders - POST", () => {
         });
 
         expect(response.statusCode).toEqual(400);
-        expect(await getOrderCount()).toBe(0);
       });
     }
   });

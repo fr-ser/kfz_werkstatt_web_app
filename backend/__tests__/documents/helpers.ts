@@ -8,36 +8,18 @@ import {
   DbDocumentOrder,
 } from "@backend/interfaces/db";
 
-export async function getDocumentCount(): Promise<number> {
-  const result = await test_pool.query("SELECT count(*)::INTEGER as count_ FROM document");
-  return result.rows[0].count_;
-}
-
-export async function getDocumentCarCount(): Promise<number> {
-  const result = await test_pool.query("SELECT count(*)::INTEGER as count_ FROM document_car");
-  return result.rows[0].count_;
-}
-
-export async function getDocumentClientCount(): Promise<number> {
-  const result = await test_pool.query("SELECT count(*)::INTEGER as count_ FROM document_client");
-  return result.rows[0].count_;
-}
-
-export async function getDocumentOrderCount(): Promise<number> {
-  const result = await test_pool.query("SELECT count(*)::INTEGER as count_ FROM document_order");
-  return result.rows[0].count_;
-}
-
-export async function getDocumentOrderHeaderCount(): Promise<number> {
+export async function getDocumentOrderHeaderCount(documentId: string): Promise<number> {
   const result = await test_pool.query(
-    "SELECT count(*)::INTEGER as count_ FROM document_order_item_header"
+    "SELECT count(*)::INTEGER as count_ FROM document_order_item_header WHERE document_id = $1",
+    [documentId]
   );
   return result.rows[0].count_;
 }
 
-export async function getDocumentOrderArticleCount(): Promise<number> {
+export async function getDocumentOrderArticleCount(documentId: string): Promise<number> {
   const result = await test_pool.query(
-    "SELECT count(*)::INTEGER as count_ FROM document_order_item_article"
+    "SELECT count(*)::INTEGER as count_ FROM document_order_item_article WHERE document_id = $1",
+    [documentId]
   );
   return result.rows[0].count_;
 }
@@ -45,6 +27,30 @@ export async function getDocumentOrderArticleCount(): Promise<number> {
 export async function documentExists(documentId: string): Promise<boolean> {
   const result = await test_pool.query(
     `SELECT EXISTS(SELECT 1 FROM document WHERE document_id = $1) as exists_`,
+    [documentId]
+  );
+  return result.rows[0].exists_;
+}
+
+export async function documentCarExists(documentId: string): Promise<boolean> {
+  const result = await test_pool.query(
+    `SELECT EXISTS(SELECT 1 FROM document_car WHERE document_id = $1) as exists_`,
+    [documentId]
+  );
+  return result.rows[0].exists_;
+}
+
+export async function documentClientExists(documentId: string): Promise<boolean> {
+  const result = await test_pool.query(
+    `SELECT EXISTS(SELECT 1 FROM document_client WHERE document_id = $1) as exists_`,
+    [documentId]
+  );
+  return result.rows[0].exists_;
+}
+
+export async function documentOrderExists(documentId: string): Promise<boolean> {
+  const result = await test_pool.query(
+    `SELECT EXISTS(SELECT 1 FROM document_order WHERE document_id = $1) as exists_`,
     [documentId]
   );
   return result.rows[0].exists_;
